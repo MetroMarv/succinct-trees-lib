@@ -1,0 +1,6 @@
+[package]
+name = "succinct-trees-lib"
+version = "0.1.0"
+authors = ["Marvin Rensing <marvin.rensing@posteo.de>"]
+
+[dependencies]
