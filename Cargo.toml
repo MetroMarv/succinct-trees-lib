@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["Marvin Rensing <marvin.rensing@posteo.de>"]
 
 [dependencies]
-bit-vec = "0.5.0"
+bv = "0.7"

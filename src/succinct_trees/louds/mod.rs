@@ -1,4 +1,4 @@
-use bit_vec::BitVec;
+use bv::BitVec;
 
 pub struct Louds {
     parenthesis: BitVec

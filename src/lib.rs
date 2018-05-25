@@ -1,4 +1,4 @@
-extern crate bit_vec;
+extern crate bv;
 
 pub mod succinct_trees;
 
@@ -6,7 +6,8 @@ pub mod succinct_trees;
 mod tests {
     use succinct_trees;
 
-    use bit_vec::BitVec;
+    use bv::*;
+    use bv::BitVec;
 
     #[test]
     fn it_works() {
@@ -15,9 +16,9 @@ mod tests {
 
     #[test]
     fn test_tree() {
-        let parenthesis: BitVec= BitVec::from_bytes(&[0b11101000]);
+        let parenthesis: BitVec= bit_vec![true, true, true, false, true, false, false, false];
         let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
 
-        assert_eq!(tree.get_parenthesis().get(3), Some(false));
+        assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
 }
