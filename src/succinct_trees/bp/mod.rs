@@ -13,18 +13,6 @@ impl BalancedParenthesis {
     pub fn get_parenthesis(&self) -> &BitVec{
         &self.parenthesis
     }
-
-    pub fn print_parenthesis(&self) {
-        println!();
-        for bit in &self.parenthesis {
-            if bit {
-                print!("(");
-            } else {
-                print!(")");
-            }
-        }
-        println!();
-    }
 }
 
 impl fmt::Display for BalancedParenthesis {
@@ -37,7 +25,7 @@ impl fmt::Display for BalancedParenthesis {
                 parenthesis_expression.push_str(")");
             }
         }
-        write!(f, "{}", parenthesis_expression)
+        write!(f, "BP-Tree: {}", parenthesis_expression)
     }
 }
 
