@@ -2,3 +2,9 @@
 /target
 **/*.rs.bk
 Cargo.lock
+.idea/encodings.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/succinct-trees-lib.iml
+.idea/vcs.xml
+.idea/workspace.xml
