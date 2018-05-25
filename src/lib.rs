@@ -15,7 +15,7 @@ mod tests {
 
     #[test]
     fn test_tree() {
-        let parenthesis: BitVec= BitVec::from_bytes(&[0b11101000]);
+        let parenthesis: BitVec = BitVec::from_bytes(&[0b11101000]);
         let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
 
         assert_eq!(tree.get_parenthesis().get(3), Some(false));
