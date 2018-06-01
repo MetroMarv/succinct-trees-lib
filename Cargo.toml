@@ -4,4 +4,7 @@ version = "0.1.0"
 authors = ["Marvin Rensing <marvin.rensing@posteo.de>"]
 
 [dependencies]
-bv = "0.7"
+bv = {version = "0.7", features = ["serde"]}
+serde = "1.0"
+serde_derive = "1.0"
+bincode = "1.0"

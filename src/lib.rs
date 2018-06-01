@@ -1,4 +1,9 @@
+#[macro_use]
 extern crate bv;
+extern crate serde;
+#[macro_use]
+extern crate serde_derive;
+extern crate bincode;
 
 pub mod succinct_trees;
 
@@ -6,8 +11,7 @@ pub mod succinct_trees;
 mod tests {
     use succinct_trees;
 
-    use bv::*;
-    use bv::BitVec;
+    use bv::{Bits,BitVec};
 
     #[test]
     fn it_works() {
