@@ -8,3 +8,8 @@ Cargo.lock
 .idea/succinct-trees-lib.iml
 .idea/vcs.xml
 .idea/workspace.xml
+_windows/
+codestyles/
+databaseSettings.xml
+debugger.xml
+succinct-trees-lib.iml
