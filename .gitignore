@@ -13,3 +13,5 @@ codestyles/
 databaseSettings.xml
 debugger.xml
 succinct-trees-lib.iml
+ide.general.xml
+git.xml
