@@ -1,9 +1,14 @@
-use bit_vec::BitVec;
+use bv::{BitVec, Bits};
 use std::fmt;
 use super::SuccinctTreeFunctions;
 
+#[derive(Debug, Serialize, Deserialize)]
 pub struct BalancedParenthesis {
     parenthesis: BitVec
+    /* For fields added in future please add
+     * #[serde(skip_deserializing,skip_serializing)]
+     * annotation. So it's not (de)serialized.
+     */
 }
 
 impl SuccinctTreeFunctions for BalancedParenthesis{
@@ -76,7 +81,9 @@ impl BalancedParenthesis {
 impl fmt::Display for BalancedParenthesis {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut parenthesis_expression = String::from("");
-        for bit in &self.parenthesis {
+        for i in 0..self.parenthesis.len()-1 {
+            let bit = self.parenthesis.get_bit(i);
+
             if bit {
                 parenthesis_expression.push_str("(");
             } else {
@@ -91,9 +98,10 @@ impl fmt::Display for BalancedParenthesis {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use bincode::{serialize, deserialize, Result };
+    use bv::Bits;
     use succinct_trees;
-    use bit_vec::BitVec;
-    use succinct_trees::bp::BalancedParenthesis;
 
 
     pub fn example_tree() -> BalancedParenthesis{
@@ -110,10 +118,22 @@ mod tests {
 
     #[test]
     fn test_tree() {
-        let parenthesis: BitVec = BitVec::from_bytes(&[0b11101000]);
+        let parenthesis: BitVec = bit_vec![true, true, true, false, true, false, false, false];
         let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
         println!("{}",tree);
-        assert_eq!(tree.get_parenthesis().get(3), Some(false));
+        assert_eq!(tree.get_parenthesis().get_bit(3), false);
+    }
+
+    #[test]
+    fn test_serialization () {
+        let parenthesis: BitVec= bit_vec![true, true, true, false, true, false, false, false];
+        let tree = BalancedParenthesis::new(parenthesis);
+
+        let serialized = serialize(&tree).unwrap();
+
+        let deserialized: Result<BalancedParenthesis> = deserialize(&serialized[..]);
+        println!("{:?}", deserialized);
+        assert_eq!(tree.get_parenthesis().get_bit(3), false)
     }
     #[test]
     fn test_is_leaf(){
