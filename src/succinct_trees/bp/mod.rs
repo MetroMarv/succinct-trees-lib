@@ -93,6 +93,20 @@ impl fmt::Display for BalancedParenthesis {
 mod tests {
     use succinct_trees;
     use bit_vec::BitVec;
+    use succinct_trees::bp::BalancedParenthesis;
+
+
+    pub fn example_tree() -> BalancedParenthesis{
+        return succinct_trees::bp::BalancedParenthesis::new(BitVec::from_bytes(&[0b11101000]));
+    }
+
+    pub fn empty_tree() -> BalancedParenthesis{
+        return succinct_trees::bp::BalancedParenthesis::new(BitVec::from_bytes(&[]));
+    }
+
+
+
+
 
     #[test]
     fn test_tree() {
@@ -101,4 +115,143 @@ mod tests {
         println!("{}",tree);
         assert_eq!(tree.get_parenthesis().get(3), Some(false));
     }
+    #[test]
+    fn test_is_leaf(){
+        assert_eq!(example_tree().is_leaf(0), false);
+        assert_eq!(example_tree().is_leaf(4), true);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_is_leaf_empty(){
+        empty_tree().get_parenthesis().get(0);
+    }
+
+    #[test]
+    fn test_rank(){
+        assert_eq!(empty_tree().rank(8) ,0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_first_child_empty(){
+        empty_tree().first_child(0);
+    }
+
+    #[test]
+    fn test_first_child(){
+        assert_eq!(example_tree().first_child(0),1);
+    }
+
+
+    #[test]
+    fn test_next_sibling(){
+        assert_eq!(example_tree().next_sibling(2), 4);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_next_sibling_empty(){
+        empty_tree().next_sibling(2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parent_empty(){
+        empty_tree().parent(4);
+    }
+
+    #[test]
+    fn test_parent(){
+        assert_eq!(example_tree().parent(1), 0)
+    }
+
+    #[test]
+    fn test_subtree_size(){
+        assert_eq!(example_tree().subtree_size(1), 2)
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_subtree_size_empty(){
+        empty_tree().subtree_size(0);
+    }
+
+    #[test]
+    fn test_ancestor(){
+        assert_eq!(example_tree().ancestor(0,1),0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_ancestor_empty(){
+        empty_tree().ancestor(0,1);
+    }
+
+    #[test]
+    fn test_level_ancestor(){
+        assert_eq!(empty_tree().level_ancestor(0,1), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_level_ancestor_empty(){
+        empty_tree().level_ancestor(0,1);
+    }
+
+    #[test]
+    fn test_lca(){
+        assert_eq!(empty_tree().lca(0,1),0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_lca_empty(){
+        empty_tree().lca(0,1);
+    }
+
+    #[test]
+    fn test_child(){
+        assert_eq!(empty_tree().child(0),1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_child_empty(){
+        empty_tree().child(0,1);
+    }
+
+    #[test]
+    fn test_depth(){
+        assert_eq!(empty_tree().depth(0),2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_depth_empty(){
+        empty_tree().depth(0);
+    }
+
+    #[test]
+    fn test_degree(){
+        assert_eq!(empty_tree().ancestor(0),0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_degree_empty(){
+        empty_tree().degree(0);
+    }
+
+    #[test]
+    fn test_enclose(){
+        assert_eq!(empty_tree().ancestor(0),0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_enclose_empty(){
+        empty_tree().enclose(0);
+    }
+
 }
