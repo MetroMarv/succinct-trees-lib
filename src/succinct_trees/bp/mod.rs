@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn test_level_ancestor(){
-        assert_eq!(empty_tree().level_ancestor(0,1), 0);
+        assert_eq!(example_tree().level_ancestor(0,1), 0);
     }
 
     #[test]
@@ -219,7 +219,7 @@ mod tests {
 
     #[test]
     fn test_lca(){
-        assert_eq!(empty_tree().lca(0,1),0);
+        assert_eq!(example_tree().lca(0,1),0);
     }
 
     #[test]
@@ -230,7 +230,7 @@ mod tests {
 
     #[test]
     fn test_child(){
-        assert_eq!(empty_tree().child(0, 0),1);
+        assert_eq!(example_tree().child(0, 0),1);
     }
 
     #[test]
@@ -241,7 +241,7 @@ mod tests {
 
     #[test]
     fn test_depth(){
-        assert_eq!(empty_tree().depth(0),2);
+        assert_eq!(example_tree().depth(0),2);
     }
 
     #[test]
@@ -252,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_degree(){
-        assert_eq!(empty_tree().degree(0),0);
+        assert_eq!(example_tree().degree(0),0);
     }
 
     #[test]
@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_enclose(){
-        assert_eq!(empty_tree().ancestor(0,1),true);
+        assert_eq!(example_tree().enclose(0,1),true);
     }
 
     #[test]
