@@ -154,6 +154,7 @@ mod tests {
             assert_eq!(tree.get_parenthesis().get_bit(i), expected);
         }
 
+        //### Clean Up
         delete_file_by_string(String::from(filename));
     }
 
@@ -180,7 +181,6 @@ mod tests {
 
 
         //### Clean Up
-        let file_string = String::from(filename);
-        delete_file_by_string(file_string)
+        delete_file_by_string(String::from(filename));
     }
 }

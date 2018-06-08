@@ -94,8 +94,6 @@ impl fmt::Display for BalancedParenthesis {
     }
 }
 
-
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -114,31 +112,26 @@ mod tests {
         return BalancedParenthesis::new(parenthesis);
     }
 
-
-
-
-
     #[test]
-    fn test_tree() {
-        let parenthesis: BitVec = bit_vec![true, true, true, false, true, false, false, false];
-        let tree = BalancedParenthesis::new(parenthesis);
+    fn test_constructor() {
+        let tree = example_tree();
         println!("{}",tree);
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
 
     #[test]
     fn test_serialization () {
-        let parenthesis: BitVec= bit_vec![true, true, true, false, true, false, false, false];
-        let tree = BalancedParenthesis::new(parenthesis);
+        let tree = example_tree();
 
         let serialized = serialize(&tree).unwrap();
 
         let deserialized: Result<BalancedParenthesis> = deserialize(&serialized[..]);
-        println!("{:?}", deserialized);
-        assert_eq!(tree.get_parenthesis().get_bit(3), false)
+
+        assert_eq!(deserialized.unwrap().get_parenthesis().get_bit(3), false)
     }
+
     #[test]
-    fn test_is_leaf(){
+    fn test_is_leaf() {
         assert_eq!(example_tree().is_leaf(0), false);
         assert_eq!(example_tree().is_leaf(4), true);
     }

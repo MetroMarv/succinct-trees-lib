@@ -99,10 +99,10 @@ mod tests {
     use bv::Bits;
 
     #[test]
-    fn test_tree() {
+    fn test_constructor() {
         let parenthesis = bit_vec!(true, true, true, false, true, false, false, false);
         let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
-        println!("{}",tree);
+
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
 }
