@@ -9,7 +9,7 @@ pub struct BalancedParenthesis {
 impl SuccinctTreeFunctions for BalancedParenthesis{
 
     fn is_leaf(_lf:i32) -> bool{
-        unimplemented!();
+        return false;
     }
     fn first_child(_lf:i32) -> i32{
         unimplemented!();
@@ -86,6 +86,8 @@ impl fmt::Display for BalancedParenthesis {
         write!(f, "BP-Tree: {}", parenthesis_expression)
     }
 }
+
+
 
 #[cfg(test)]
 mod tests {
