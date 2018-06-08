@@ -13,55 +13,55 @@ pub struct BalancedParenthesis {
 
 impl SuccinctTreeFunctions for BalancedParenthesis{
 
-    fn is_leaf(_lf:i32) -> bool{
-        return false;
+    fn is_leaf(&self, _lf:u64) -> bool{
+         unimplemented!();
     }
-    fn first_child(_lf:i32) -> i32{
+    fn first_child(&self,_lf:u64) -> u64{
+         unimplemented!();
+    }
+    fn next_sibling(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn next_sibling(_lf:i32) -> i32{
+    fn parent(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn parent(_lf:i32) -> i32{
+    fn rank(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn rank(_lf:i32) -> i32{
+    fn select(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn select(_lf:i32) -> i32{
+    fn close_rank(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn close_rank(_lf:i32) -> i32{
+    fn close_select(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn close_select(_lf:i32) -> i32{
+    fn enclose(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn enclose(_lf:i32) -> i32{
+    fn subtree_size(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn subtree_size(_lf:i32) -> i32{
+    fn pre_rank(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn pre_rank(_lf:i32) -> i32{
+    fn ancestor(&self,_lf:u64, _lf2:u64) -> bool{
         unimplemented!();
     }
-    fn ancestor(_lf:i32, _lf2:i32) -> bool{
+    fn child(&self,_lf:u64, _lf2:u64) -> u64{
         unimplemented!();
     }
-    fn child(_lf:i32, _lf2:i32) -> i32{
+    fn lca(&self,_lf:u64, _lf2:u64) -> u64{
         unimplemented!();
     }
-    fn lca(_lf:i32, _lf2:i32) -> i32{
+    fn level_ancestor(&self,_lf:u64, _lf2:u64) -> u64{
         unimplemented!();
     }
-    fn level_ancestor(_lf:i32, _lf2:i32) -> i32{
+    fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn degree(_lf:i32) -> i32{
-        unimplemented!();
-    }
-    fn depth(_lf:i32) -> i32{
+    fn depth(&self,_lf:u64) -> u64{
         unimplemented!();
     }
 
@@ -101,15 +101,17 @@ mod tests {
     use super::*;
     use bincode::{serialize, deserialize, Result };
     use bv::Bits;
-    use succinct_trees;
+    use succinct_trees::SuccinctTreeFunctions;
 
 
     pub fn example_tree() -> BalancedParenthesis{
-        return succinct_trees::bp::BalancedParenthesis::new(BitVec::from_bytes(&[0b11101000]));
+        let parenthesis: BitVec = bit_vec![true, true, true, false, true, false, false, false];
+        return BalancedParenthesis::new(parenthesis);
     }
 
     pub fn empty_tree() -> BalancedParenthesis{
-        return succinct_trees::bp::BalancedParenthesis::new(BitVec::from_bytes(&[]));
+        let parenthesis: BitVec = bit_vec![];
+        return BalancedParenthesis::new(parenthesis);
     }
 
 
@@ -119,7 +121,7 @@ mod tests {
     #[test]
     fn test_tree() {
         let parenthesis: BitVec = bit_vec![true, true, true, false, true, false, false, false];
-        let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
+        let tree = BalancedParenthesis::new(parenthesis);
         println!("{}",tree);
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
@@ -144,7 +146,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_is_leaf_empty(){
-        empty_tree().get_parenthesis().get(0);
+        empty_tree().get_parenthesis().get_bit(0);
     }
     
 
@@ -195,7 +197,7 @@ mod tests {
 
     #[test]
     fn test_ancestor(){
-        assert_eq!(example_tree().ancestor(0,1),0);
+        assert_eq!(example_tree().ancestor(0,1),false);
     }
 
     #[test]
@@ -228,7 +230,7 @@ mod tests {
 
     #[test]
     fn test_child(){
-        assert_eq!(empty_tree().child(0),1);
+        assert_eq!(empty_tree().child(0, 0),1);
     }
 
     #[test]
@@ -250,7 +252,7 @@ mod tests {
 
     #[test]
     fn test_degree(){
-        assert_eq!(empty_tree().ancestor(0),0);
+        assert_eq!(empty_tree().degree(0),0);
     }
 
     #[test]
@@ -261,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_enclose(){
-        assert_eq!(empty_tree().ancestor(0),0);
+        assert_eq!(empty_tree().ancestor(0,1),true);
     }
 
     #[test]
