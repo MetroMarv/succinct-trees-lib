@@ -1,8 +1,4 @@
-use std::fmt;
-use bv::{BitVec, Bits};
-use serde::ser::{Serialize, Serializer, SerializeStruct, SerializeSeq};
-use serde::de::{Deserialize, Deserializer, Visitor, SeqAccess, MapAccess};
-use std::result::Result;
+use bv::BitVec;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct BalancedParenthesis {
@@ -28,8 +24,7 @@ mod tests {
 
     use super::*;
     use bincode::{serialize, deserialize, Result };
-    use std::fs::File;
-    use std::io::prelude::*;
+    use bv::Bits;
 
     #[test]
     fn test_serialization () {

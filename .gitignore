@@ -8,3 +8,4 @@ Cargo.lock
 .idea/succinct-trees-lib.iml
 .idea/vcs.xml
 .idea/workspace.xml
+succinct-trees-lib.iml
