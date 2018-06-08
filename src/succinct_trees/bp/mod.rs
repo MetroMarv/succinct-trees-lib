@@ -13,55 +13,55 @@ pub struct BalancedParenthesis {
 
 impl SuccinctTreeFunctions for BalancedParenthesis{
 
-    fn is_leaf(_lf:i32) -> bool{
+    fn is_leaf(&self, _lf:u64) -> bool{
+         unimplemented!();
+    }
+    fn first_child(&self,_lf:u64) -> u64{
+         unimplemented!();
+    }
+    fn next_sibling(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn first_child(_lf:i32) -> i32{
+    fn parent(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn next_sibling(_lf:i32) -> i32{
+    fn rank(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn parent(_lf:i32) -> i32{
+    fn select(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn rank(_lf:i32) -> i32{
+    fn close_rank(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn select(_lf:i32) -> i32{
+    fn close_select(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn close_rank(_lf:i32) -> i32{
+    fn enclose(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn close_select(_lf:i32) -> i32{
+    fn subtree_size(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn enclose(_lf:i32) -> i32{
+    fn pre_rank(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn subtree_size(_lf:i32) -> i32{
+    fn ancestor(&self,_lf:u64, _lf2:u64) -> bool{
         unimplemented!();
     }
-    fn pre_rank(_lf:i32) -> i32{
+    fn child(&self,_lf:u64, _lf2:u64) -> u64{
         unimplemented!();
     }
-    fn ancestor(_lf:i32, _lf2:i32) -> bool{
+    fn lca(&self,_lf:u64, _lf2:u64) -> u64{
         unimplemented!();
     }
-    fn child(_lf:i32, _lf2:i32) -> i32{
+    fn level_ancestor(&self,_lf:u64, _lf2:u64) -> u64{
         unimplemented!();
     }
-    fn lca(_lf:i32, _lf2:i32) -> i32{
+    fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    fn level_ancestor(_lf:i32, _lf2:i32) -> i32{
-        unimplemented!();
-    }
-    fn degree(_lf:i32) -> i32{
-        unimplemented!();
-    }
-    fn depth(_lf:i32) -> i32{
+    fn depth(&self,_lf:u64) -> u64{
         unimplemented!();
     }
 
@@ -94,17 +94,34 @@ impl fmt::Display for BalancedParenthesis {
     }
 }
 
+
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use bincode::{serialize, deserialize, Result };
     use bv::Bits;
-    use succinct_trees;
+    use succinct_trees::SuccinctTreeFunctions;
+
+
+    pub fn example_tree() -> BalancedParenthesis{
+        let parenthesis: BitVec = bit_vec![true, true, true, false, true, false, false, false];
+        return BalancedParenthesis::new(parenthesis);
+    }
+
+    pub fn empty_tree() -> BalancedParenthesis{
+        let parenthesis: BitVec = bit_vec![];
+        return BalancedParenthesis::new(parenthesis);
+    }
+
+
+
+
 
     #[test]
     fn test_tree() {
         let parenthesis: BitVec = bit_vec![true, true, true, false, true, false, false, false];
-        let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
+        let tree = BalancedParenthesis::new(parenthesis);
         println!("{}",tree);
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
@@ -120,4 +137,139 @@ mod tests {
         println!("{:?}", deserialized);
         assert_eq!(tree.get_parenthesis().get_bit(3), false)
     }
+    #[test]
+    fn test_is_leaf(){
+        assert_eq!(example_tree().is_leaf(0), false);
+        assert_eq!(example_tree().is_leaf(4), true);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_is_leaf_empty(){
+        empty_tree().get_parenthesis().get_bit(0);
+    }
+    
+
+    #[test]
+    #[should_panic]
+    fn test_first_child_empty(){
+        empty_tree().first_child(0);
+    }
+
+    #[test]
+    fn test_first_child(){
+        assert_eq!(example_tree().first_child(0),1);
+    }
+
+
+    #[test]
+    fn test_next_sibling(){
+        assert_eq!(example_tree().next_sibling(2), 4);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_next_sibling_empty(){
+        empty_tree().next_sibling(2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_parent_empty(){
+        empty_tree().parent(4);
+    }
+
+    #[test]
+    fn test_parent(){
+        assert_eq!(example_tree().parent(1), 0)
+    }
+
+    #[test]
+    fn test_subtree_size(){
+        assert_eq!(example_tree().subtree_size(1), 2)
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_subtree_size_empty(){
+        empty_tree().subtree_size(0);
+    }
+
+    #[test]
+    fn test_ancestor(){
+        assert_eq!(example_tree().ancestor(0,1),false);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_ancestor_empty(){
+        empty_tree().ancestor(0,1);
+    }
+
+    #[test]
+    fn test_level_ancestor(){
+        assert_eq!(empty_tree().level_ancestor(0,1), 0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_level_ancestor_empty(){
+        empty_tree().level_ancestor(0,1);
+    }
+
+    #[test]
+    fn test_lca(){
+        assert_eq!(empty_tree().lca(0,1),0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_lca_empty(){
+        empty_tree().lca(0,1);
+    }
+
+    #[test]
+    fn test_child(){
+        assert_eq!(empty_tree().child(0, 0),1);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_child_empty(){
+        empty_tree().child(0,1);
+    }
+
+    #[test]
+    fn test_depth(){
+        assert_eq!(empty_tree().depth(0),2);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_depth_empty(){
+        empty_tree().depth(0);
+    }
+
+    #[test]
+    fn test_degree(){
+        assert_eq!(empty_tree().degree(0),0);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_degree_empty(){
+        empty_tree().degree(0);
+    }
+
+    #[test]
+    fn test_enclose(){
+        assert_eq!(empty_tree().ancestor(0,1),true);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_enclose_empty(){
+        empty_tree().enclose(0);
+    }
+
 }
