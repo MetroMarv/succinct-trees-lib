@@ -126,11 +126,7 @@ mod tests {
     fn test_is_leaf_empty(){
         empty_tree().get_parenthesis().get(0);
     }
-
-    #[test]
-    fn test_rank(){
-        assert_eq!(empty_tree().rank(8) ,0);
-    }
+    
 
     #[test]
     #[should_panic]
