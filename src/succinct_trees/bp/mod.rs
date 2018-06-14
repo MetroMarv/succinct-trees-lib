@@ -219,18 +219,18 @@ mod tests {
 
     #[test]
     fn test_lca(){
-        assert_eq!(example_tree().lca(0,1),0);
+        assert_eq!(example_tree().lca(2,4),0);
     }
 
     #[test]
     #[should_panic]
     fn test_lca_empty(){
-        empty_tree().lca(0,1);
+        empty_tree().lca(2,4);
     }
 
     #[test]
     fn test_child(){
-        assert_eq!(example_tree().child(0, 0),1);
+        assert_eq!(example_tree().child(0, 1),1);
     }
 
     #[test]
