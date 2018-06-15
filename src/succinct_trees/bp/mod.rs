@@ -89,25 +89,19 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
 
 impl RangeMinMaxTree {
-
-
-
+    
     pub fn new(tree: BalancedParenthesis, block_size: u64) -> RangeMinMaxTree {
         let len = ((2*tree.parenthesis.len())/block_size) as usize;
         let len_f = len as f64;
 
         // set vec length
-        let mut excess = vec!();
-        let mut maximum = vec!();
-        let mut minimum = vec!();
-        let mut quantity = vec!();
+        let mut excess = Vec::with_capacity(len);
+        let mut maximum = Vec::with_capacity(len);
+        let mut minimum = Vec::with_capacity(len);
+        let mut quantity = Vec::with_capacity(len);
 
-        let rmm = RangeMinMaxTree{excess, maximum, minimum, quantity};
+        let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity};
 
-        rmm.excess.set_len(len);
-        rmm.maximum.set_len(len);
-        rmm.minimum.set_len(len);
-        rmm.quantity.set_len(len);
 
         let mut row = 1;
 
@@ -154,6 +148,9 @@ impl RangeMinMaxTree {
                     qty = 0;
                 }
             }
+
+            row += 1;
+
         }
 
         rmm
