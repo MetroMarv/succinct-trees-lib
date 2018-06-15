@@ -11,13 +11,28 @@ pub struct BalancedParenthesis {
      */
 }
 
+pub struct RangeMinMaxTree {
+    excess: Vec<u64>,
+    maximum: Vec<u64>,
+    minimum: Vec<u64>,
+    quantity: Vec<u64>,
+}
+
 impl SuccinctTreeFunctions for BalancedParenthesis{
 
     fn is_leaf(&self, _lf:u64) -> bool{
-         unimplemented!();
+        if self.parenthesis.get_bit(_lf) {
+            !self.parenthesis.get_bit(_lf + 1)
+        } else {
+            self.parenthesis.get_bit(_lf - 1)
+        }
     }
+
     fn first_child(&self,_lf:u64) -> u64{
-         unimplemented!();
+
+        if !self.is_leaf(_lf){
+            return _lf + 1;
+        };
     }
     fn next_sibling(&self,_lf:u64) -> u64{
         unimplemented!();
@@ -61,12 +76,36 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
     }
+    
     fn depth(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.excess(_lf)
     }
 
 }
 
+
+impl RangeMinMaxTree {
+    pub fn new(tree: BalancedParenthesis, block_size: u64) {
+        let len = (2*tree.parenthesis.length)/block_size;
+
+        // Arrays mit richtiger länge len initalisieren
+
+        for par in tree.parenthesis {
+
+        // für jeden block excess, minimum etc. errechnen und arrays füllen
+
+        }
+
+        // rMm erstellen und returnen
+
+    }
+
+    pub fn fwdsearch(i: u64, d: u64) {}
+
+    pub fn bwdsearch(i: u64, d: u64) {}
+
+
+}
 
 impl BalancedParenthesis {
     pub fn new(parenthesis: BitVec) -> BalancedParenthesis {
@@ -75,6 +114,18 @@ impl BalancedParenthesis {
 
     pub fn get_parenthesis(&self) -> &BitVec{
         &self.parenthesis
+    }
+
+    pub(crate) fn excess(&self, position: u64) -> u64 {
+        let mut count = 0;
+        for i in 0..position {
+            if self.parenthesis.get_bit(i) {
+                count += 1;
+            } else {
+                count -= 1;
+            }
+        }
+        count
     }
 }
 
