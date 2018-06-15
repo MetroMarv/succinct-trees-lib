@@ -34,8 +34,9 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn first_child(&self,_lf:u64) -> u64{
 
         if !self.is_leaf(_lf){
-            return _lf + 1;
-        };
+            return Some(_lf + 1);
+        }
+        return None;
     }
     fn next_sibling(&self,_lf:u64) -> u64{
         unimplemented!();
