@@ -29,11 +29,11 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     }
 
     fn first_child(&self,_lf:u64) -> u64{
-
         if !self.is_leaf(_lf){
             return _lf + 1;
         };
     }
+
     fn next_sibling(&self,_lf:u64) -> u64{
         unimplemented!();
     }
@@ -85,18 +85,60 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
 
 impl RangeMinMaxTree {
-    pub fn new(tree: BalancedParenthesis, block_size: u64) {
+    pub fn new(&self, tree: BalancedParenthesis, block_size: u64) -> RangeMinMaxTree {
         let len = (2*tree.parenthesis.length)/block_size;
 
-        // Arrays mit richtiger länge len initalisieren
+        // set vec length
 
-        for par in tree.parenthesis {
+        self.excess.set_len(len);
+        self.maximum.set_len(len);
+        self.minimum.set_len(len);
+        self.quantity.set_len(len);
 
-        // für jeden block excess, minimum etc. errechnen und arrays füllen
+        let mut row = 1;
 
+        for i in 1..log2(len) {
+            let mut block_count = 0;
+            let mut vec_count = 0;
+
+            let mut exc :i64 = 0;
+            let mut max = 0;
+            let mut min = 0;
+            let mut qty = 0;
+
+            for par in tree.parenthesis {
+                if tree.parenthesis.get_bit(i) {
+                    exc += 1;
+                } else {
+                    exc -= 1;
+                }
+
+                if exc > max {
+                    max = exc;
+                }
+
+                if exc < min {
+                    min = exc;
+                    qty = 1;
+                } else if exc = min {
+                    qty += 1;
+                }
+
+                if block_count <= block_size {
+                    block_count += 1;
+                } else {
+                    self.excess.insert(len/exp2(row) + vec_count, exc);
+                    vec_count += 1;
+                    block_count = 0;
+                    exc = 0;
+                    max = 0;
+                    min = 0;
+                    qty = 0;
+                }
+            }
         }
 
-        // rMm erstellen und returnen
+        RangeMinMaxTree
 
     }
 
