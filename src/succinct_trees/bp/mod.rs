@@ -12,10 +12,10 @@ pub struct BalancedParenthesis {
 }
 
 pub struct RangeMinMaxTree {
-    excess: [u64],
-    maximum: [u64],
-    minimum: [u64],
-    quantity: [u64]
+    excess: Vec<u64>,
+    maximum: Vec<u64>,
+    minimum: Vec<u64>,
+    quantity: Vec<u64>,
 }
 
 impl SuccinctTreeFunctions for BalancedParenthesis{
@@ -73,8 +73,9 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
     }
+    
     fn depth(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.excess(_lf)
     }
 
 }
@@ -110,6 +111,18 @@ impl BalancedParenthesis {
 
     pub fn get_parenthesis(&self) -> &BitVec{
         &self.parenthesis
+    }
+
+    pub(crate) fn excess(&self, position: u64) -> u64 {
+        let mut count = 0;
+        for i in 0..position {
+            if self.parenthesis.get_bit(i) {
+                count += 1;
+            } else {
+                count -= 1;
+            }
+        }
+        count
     }
 }
 
