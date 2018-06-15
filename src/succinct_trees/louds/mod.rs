@@ -57,8 +57,8 @@ impl SuccinctTreeFunctions for Louds{
         self.parenthesis.get_bit(node) == false
     }
 
-    fn first_child(&self,_lf:u64) -> u64{
-        unimplemented!();
+    fn first_child(&self, node:u64) -> u64{
+        self.child(node, 0)
     }
 
     fn next_sibling(&self, node:u64) -> u64{
@@ -117,10 +117,12 @@ impl SuccinctTreeFunctions for Louds{
         assert!(self.has_index(node));
 
         let message = String::from(format!("Couldn't determine rank_1 of index {}", node));
-        let rank_1 = self.rank_select.rank_1(node).expect(&message);
+        let rank_1 = self.rank_select.rank_1(node).expect(&message) -1 ;
 
         let message = String::from(format!("Couldn't determine select_0 of index {}", rank_1 + index));
         let select = self.rank_select.select_0(rank_1 + index).expect(&message);
+        println!("Child: rank_1 = {}, select_0 = {}", rank_1, select);
+
 
         select + 1
     }
@@ -219,7 +221,7 @@ mod tests {
 
     #[test]
     fn test_first_child(){
-        assert_eq!(example_tree().first_child(0),3);
+        assert_eq!(example_tree().first_child(1),3);
     }
 
 
@@ -297,8 +299,17 @@ mod tests {
     }
 
     #[test]
-    fn test_child(){
-        assert_eq!(example_tree().child(3, 2),7);
+    fn test_child() {
+        assert_eq!(example_tree().child(3, 1),7);
+    }
+
+    #[test]
+    fn test_child_root () {
+        let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, true, false, false, false, false];
+        let tree = Louds::new(parenthesis);
+
+        assert_eq!(tree.child(1, 0),4);
+        assert_eq!(tree.child(1, 1),7);
     }
 
     #[test]
