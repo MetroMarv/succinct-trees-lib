@@ -2,6 +2,7 @@ pub mod bp;
 pub mod louds;
 
 pub trait SuccinctTreeFunctions{
+    fn has_index(&self, _:u64) -> bool;
     fn is_leaf(&self, _:u64) -> bool;
     fn first_child(&self,_: u64) -> u64;
     fn next_sibling(&self,_: u64) -> u64;
@@ -47,7 +48,7 @@ pub mod parser {
             }
         }
 
-        fn read_file_as_bitvec (&mut self) -> BitVec {
+        fn read_file_as_bitvec (&mut self) -> BitVec<u8> {
             let parenthesis = self.read_file();
 
             println!("Parenthesis: {}", parenthesis);
@@ -97,7 +98,7 @@ pub mod parser {
             }
         }
 
-        fn write_file_from_bitvec (&mut self, tree: &BitVec) {
+        fn write_file_from_bitvec (&mut self, tree: &BitVec<u8>) {
             for i in 0..tree.len() {
                 self.write_bit(tree.get_bit(i));
             }
@@ -145,7 +146,7 @@ mod tests {
         let tree = parser.read_bp();
 
         //### Then
-        let parenthesis: BitVec= bit_vec![true, true, true, false, true, false, false, false];
+        let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
 
         assert_eq!(tree.get_parenthesis().len(), parenthesis.len());
 
@@ -164,7 +165,7 @@ mod tests {
         let filename = "test_parser_write.txt";
         let file = File::create(String::from(filename)).unwrap();
 
-        let parenthesis: BitVec= bit_vec![true, true, true, false, true, false, false, false];
+        let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
         let tree = BalancedParenthesis::new(parenthesis);
 
         //### When
