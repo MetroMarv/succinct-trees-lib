@@ -196,8 +196,7 @@ mod tests {
 
     #[test]
     fn test_constructor() {
-        let parenthesis = bit_vec!(true, true, true, false, true, false, false, false);
-        let tree = Louds::new(parenthesis);
+        let tree = example_tree();
 
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
