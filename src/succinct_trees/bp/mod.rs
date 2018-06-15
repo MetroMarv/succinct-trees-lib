@@ -12,9 +12,9 @@ pub struct BalancedParenthesis {
 }
 
 pub struct RangeMinMaxTree {
-    excess: Vec<u64>,
-    maximum: Vec<u64>,
-    minimum: Vec<u64>,
+    excess: Vec<i64>,
+    maximum: Vec<i64>,
+    minimum: Vec<i64>,
     quantity: Vec<u64>,
 }
 
@@ -85,19 +85,27 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
 
 impl RangeMinMaxTree {
-    pub fn new(&self, tree: BalancedParenthesis, block_size: u64) -> RangeMinMaxTree {
-        let len = (2*tree.parenthesis.length)/block_size;
+    pub fn new(tree: BalancedParenthesis, block_size: u64) -> RangeMinMaxTree {
+        let len = ((2*tree.parenthesis.len())/block_size) as usize;
+        let len_f = len as f64;
 
         // set vec length
+        let excess = vec!();
+        let maximum = vec!();
+        let minimum = vec!();
+        let quantity = vec!();
 
-        self.excess.set_len(len);
-        self.maximum.set_len(len);
-        self.minimum.set_len(len);
-        self.quantity.set_len(len);
+        let rmm = RangeMinMaxTree{excess, maximum, minimum, quantity};
+
+
+        rmm.excess.set_len(len);
+        rmm.maximum.set_len(len);
+        rmm.minimum.set_len(len);
+        rmm.quantity.set_len(len);
 
         let mut row = 1;
 
-        for i in 1..log2(len) {
+        for i in 1..len_f.log2().floor() as u64 {
             let mut block_count = 0;
             let mut vec_count = 0;
 
@@ -106,8 +114,8 @@ impl RangeMinMaxTree {
             let mut min = 0;
             let mut qty = 0;
 
-            for par in tree.parenthesis {
-                if tree.parenthesis.get_bit(i) {
+            for j in 0..tree.parenthesis.len() - 1 {
+                if tree.parenthesis.get_bit(j) {
                     exc += 1;
                 } else {
                     exc -= 1;
@@ -120,14 +128,18 @@ impl RangeMinMaxTree {
                 if exc < min {
                     min = exc;
                     qty = 1;
-                } else if exc = min {
+                } else if exc == min {
                     qty += 1;
                 }
 
                 if block_count <= block_size {
                     block_count += 1;
                 } else {
-                    self.excess.insert(len/exp2(row) + vec_count, exc);
+                    rmm.excess.insert(len/(2_usize.pow(row)) + vec_count, exc);
+                    rmm.minimum.insert(len/(2_usize.pow(row)) + vec_count, min);
+                    rmm.maximum.insert(len/(2_usize.pow(row)) + vec_count, max);
+                    rmm.quantity.insert(len/(2_usize.pow(row)) + vec_count, qty);
+
                     vec_count += 1;
                     block_count = 0;
                     exc = 0;
@@ -138,7 +150,7 @@ impl RangeMinMaxTree {
             }
         }
 
-        RangeMinMaxTree
+        rmm
 
     }
 
