@@ -263,7 +263,7 @@ mod tests {
 
     #[test]
     fn test_enclose(){
-        assert_eq!(example_tree().enclose(0,1),true);
+        assert_eq!(example_tree().enclose(0),1);
     }
 
     #[test]
