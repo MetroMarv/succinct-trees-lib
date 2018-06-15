@@ -31,7 +31,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         }
     }
 
-    fn first_child(&self,_lf:u64) -> u64{
+    fn first_child(&self,_lf:u64) -> Option<u64>{
 
         if !self.is_leaf(_lf){
             return Some(_lf + 1);
@@ -90,15 +90,15 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
 impl RangeMinMaxTree {
     pub fn new(tree: BalancedParenthesis, block_size: u64) {
-        let len = (2*tree.parenthesis.length)/block_size;
+        let len = (2*tree.parenthesis.len())/block_size;
 
         // Arrays mit richtiger länge len initalisieren
 
-        for par in tree.parenthesis {
+        /*for par in tree.parenthesis {
 
         // für jeden block excess, minimum etc. errechnen und arrays füllen
 
-        }
+        }*/
 
         // rMm erstellen und returnen
 
