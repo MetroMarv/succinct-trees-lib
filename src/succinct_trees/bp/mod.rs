@@ -19,7 +19,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn is_leaf(&self, _lf:u64) -> bool{
          unimplemented!();
     }
-    fn first_child(&self,_lf:u64) -> u64{
+    fn first_child(&self,_lf:u64) -> Option<u64>{
          unimplemented!();
     }
     fn next_sibling(&self,_lf:u64) -> u64{
@@ -52,7 +52,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn ancestor(&self,_lf:u64, _lf2:u64) -> bool{
         unimplemented!();
     }
-    fn child(&self,_lf:u64, _lf2:u64) -> u64{
+    fn child(&self,_lf:u64, _lf2:u64) -> Option<u64>{
         unimplemented!();
     }
     fn lca(&self,_lf:u64, _lf2:u64) -> u64{
@@ -154,7 +154,7 @@ mod tests {
 
     #[test]
     fn test_first_child(){
-        assert_eq!(example_tree().first_child(0),1);
+        assert_eq!(example_tree().first_child(0),Some(1));
     }
 
 
@@ -226,7 +226,7 @@ mod tests {
 
     #[test]
     fn test_child(){
-        assert_eq!(example_tree().child(0, 0),1);
+        assert_eq!(example_tree().child(0, 0),Some(1));
     }
 
     #[test]

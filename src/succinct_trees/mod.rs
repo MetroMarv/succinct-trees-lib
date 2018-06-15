@@ -4,7 +4,7 @@ pub mod louds;
 pub trait SuccinctTreeFunctions{
     fn has_index(&self, _:u64) -> bool;
     fn is_leaf(&self, _:u64) -> bool;
-    fn first_child(&self,_: u64) -> u64;
+    fn first_child(&self,_: u64) -> Option<u64>;
     fn next_sibling(&self,_: u64) -> u64;
     fn parent(&self,_: u64) -> u64;
     fn rank(&self,_: u64) -> u64;
@@ -15,7 +15,7 @@ pub trait SuccinctTreeFunctions{
     fn subtree_size(&self,_: u64) -> u64;
     fn pre_rank(&self,_: u64) -> u64;
     fn ancestor(&self,_: u64, _: u64) -> bool;
-    fn child(&self,_: u64,_: u64) -> u64;
+    fn child(&self,_: u64,_: u64) -> Option<u64>;
     fn lca (&self,_: u64, _: u64) -> u64;
     fn level_ancestor(&self,_: u64, _: u64) -> u64;
     fn degree(&self,_: u64) -> u64;

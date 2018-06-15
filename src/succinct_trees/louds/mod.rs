@@ -44,6 +44,18 @@ impl Louds {
         let message = String::from(format!("Couldn't determine select_0 from index {}", rank));
         self.rank_select.select_0(rank).expect(&message)
     }
+
+    fn child_count (&self, node: u64) -> u64 {
+        assert!(self.has_index(node));
+
+        let rank0_until_node = self.rank_select.rank_0(node-1).unwrap();
+        let rank1_until_node = self.rank_select.rank_1(node -1).unwrap();
+
+        let index_node_over = self.rank_select.select_0(rank0_until_node +1).unwrap();
+        let rank1_after_node = self.rank_select.rank_1(index_node_over).unwrap();
+
+        rank1_after_node - rank1_until_node
+    }
 }
 
 impl SuccinctTreeFunctions for Louds{
@@ -57,7 +69,7 @@ impl SuccinctTreeFunctions for Louds{
         self.parenthesis.get_bit(node) == false
     }
 
-    fn first_child(&self, node:u64) -> u64{
+    fn first_child(&self, node:u64) -> Option<u64>{
         self.child(node, 0)
     }
 
@@ -113,18 +125,20 @@ impl SuccinctTreeFunctions for Louds{
         unimplemented!();
     }
 
-    fn child(&self, node:u64, index:u64) -> u64{
+    fn child(&self, node:u64, index:u64) -> Option<u64>{
         assert!(self.has_index(node));
+
+        if self.child_count(node) < index +1  {
+            return None;
+        }
 
         let message = String::from(format!("Couldn't determine rank_1 of index {}", node));
         let rank_1 = self.rank_select.rank_1(node).expect(&message) -1 ;
 
         let message = String::from(format!("Couldn't determine select_0 of index {}", rank_1 + index));
         let select = self.rank_select.select_0(rank_1 + index).expect(&message);
-        println!("Child: rank_1 = {}, select_0 = {}", rank_1, select);
 
-
-        select + 1
+        Some(select + 1)
     }
 
     fn lca(&self,_lf:u64, _lf2:u64) -> u64{
@@ -201,6 +215,13 @@ mod tests {
 //    }
 
     #[test]
+    fn test_child_count () {
+        assert_eq!(example_tree().child_count(1), 1);
+        assert_eq!(example_tree().child_count(3), 2);
+        assert_eq!(example_tree().child_count(6), 0);
+    }
+
+    #[test]
     fn test_is_leaf(){
         assert_eq!(example_tree().is_leaf(0), false);
         assert_eq!(example_tree().is_leaf(6), true);
@@ -221,7 +242,7 @@ mod tests {
 
     #[test]
     fn test_first_child(){
-        assert_eq!(example_tree().first_child(1),3);
+        assert_eq!(example_tree().first_child(1),Some(3));
     }
 
 
@@ -300,7 +321,7 @@ mod tests {
 
     #[test]
     fn test_child() {
-        assert_eq!(example_tree().child(3, 1),7);
+        assert_eq!(example_tree().child(3, 1),Some(7));
     }
 
     #[test]
@@ -308,14 +329,19 @@ mod tests {
         let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, true, false, false, false, false];
         let tree = Louds::new(parenthesis);
 
-        assert_eq!(tree.child(1, 0),4);
-        assert_eq!(tree.child(1, 1),7);
+        assert_eq!(tree.child(1, 0), Some(4));
+        assert_eq!(tree.child(1, 1), Some(7));
     }
 
     #[test]
     #[should_panic]
     fn test_child_empty(){
         empty_tree().child(0,1);
+    }
+
+    #[test]
+    fn test_child_non_existing (){
+        assert_eq!(example_tree().child(1, 2), None);
     }
 
     #[test]
