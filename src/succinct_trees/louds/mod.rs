@@ -179,7 +179,6 @@ impl fmt::Display for Louds {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bincode::{serialize, deserialize, Result };
     use bv::Bits;
     use succinct_trees::SuccinctTreeFunctions;
 
