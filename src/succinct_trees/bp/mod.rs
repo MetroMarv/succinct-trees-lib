@@ -16,7 +16,9 @@ pub struct RangeMinMaxTree {
     maximum: Vec<i64>,
     minimum: Vec<i64>,
     quantity: Vec<u64>,
+    blksize: u64,
 }
+
 
 impl SuccinctTreeFunctions for BalancedParenthesis{
     fn has_index(&self, index:u64) -> bool {
@@ -91,6 +93,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 impl RangeMinMaxTree {
 
     pub fn new(tree: BalancedParenthesis, block_size: u64) -> RangeMinMaxTree {
+        let blksize = block_size;
         let len = ((2*tree.parenthesis.len())/block_size) as usize;
         let len_f = len as f64;
 
@@ -100,7 +103,7 @@ impl RangeMinMaxTree {
         let mut minimum = Vec::with_capacity(len);
         let mut quantity = Vec::with_capacity(len);
 
-        let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity};
+        let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity, blksize};
 
 
         let mut row = 1;
@@ -157,7 +160,9 @@ impl RangeMinMaxTree {
 
     }
 
-    pub fn fwdsearch(_i: u64, _d: u64) {}
+    pub fn fwdsearch(_i: u64, mut _d: i64) {}
+
+
 
     pub fn bwdsearch(_i: u64, _d: u64) {}
 
