@@ -3,14 +3,8 @@ use std::fmt;
 use super::SuccinctTreeFunctions;
 use bio::data_structures::rank_select::RankSelect;
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
-use serde::ser::SerializeSeq;
 
 pub struct Louds {
-    parenthesis: BitVec<u8>,
-    /* For fields added in future please add
-     * #[serde(skip_deserializing,skip_serializing)]
-     * annotation. So it's not (de)serialized.
-     */
     rank_select: RankSelect
 }
 
@@ -19,11 +13,11 @@ impl Louds {
         // TODO: calculate block size floor(log(n)^2/32)
         let rank_select = RankSelect::new(parenthesis.clone(), 4);
 
-        Louds{parenthesis, rank_select}
+        Louds{rank_select}
     }
 
     pub fn get_parenthesis(&self) -> &BitVec<u8> {
-        &self.parenthesis
+        &self.rank_select.bits()
     }
 
     fn prev_0 (&self, index: u64) -> u64 {
@@ -50,13 +44,13 @@ impl Louds {
 
 impl SuccinctTreeFunctions for Louds{
     fn has_index(&self, index:u64) -> bool {
-        index < self.parenthesis.len()
+        index < self.get_parenthesis().len()
     }
 
     fn is_leaf(&self, node:u64) -> bool{
         assert!(self.has_index(node));
 
-        self.parenthesis.get_bit(node) == false
+        self.get_parenthesis().get_bit(node) == false
     }
 
     fn first_child(&self, node:u64) -> Option<u64>{
@@ -142,7 +136,7 @@ impl SuccinctTreeFunctions for Louds{
     fn degree(&self, node:u64) -> u64{
         assert!(self.has_index(node));
 
-        if !self.parenthesis[node] {
+        if !self.get_parenthesis()[node] {
             return 0;
         }
 
@@ -157,8 +151,8 @@ impl SuccinctTreeFunctions for Louds{
 impl fmt::Display for Louds {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut parenthesis_expression = String::from("");
-        for i in 0..self.parenthesis.len()-1 {
-            let bit = self.parenthesis.get_bit(i);
+        for i in 0..self.get_parenthesis().len()-1 {
+            let bit = self.get_parenthesis().get_bit(i);
 
             if bit {
                 parenthesis_expression.push_str("(");
@@ -175,7 +169,7 @@ impl Serialize for Louds {
         where
             S: Serializer,
     {
-        self.parenthesis.serialize(serializer)
+        self.get_parenthesis().serialize(serializer)
     }
 }
 

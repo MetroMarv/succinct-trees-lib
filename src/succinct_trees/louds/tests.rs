@@ -37,11 +37,11 @@ fn test_deserialization () {
     let serialized = [2, 0, 0, 0, 0, 0, 0, 0, 27, 0, 8, 0, 0, 0, 0, 0, 0, 0];
     let tree: Louds = deserialize(&serialized).unwrap();
 
-    assert_eq!(tree.parenthesis, example_tree().parenthesis)
+    assert_eq!(tree.get_parenthesis(), example_tree().get_parenthesis())
 }
 
 #[test]
-fn test_is_leaf(){
+fn test_is_leaf () {
     let tree = example_tree();
 
     assert_eq!(tree.is_leaf(0), false);
