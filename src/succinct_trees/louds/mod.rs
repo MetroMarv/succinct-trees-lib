@@ -48,13 +48,11 @@ impl Louds {
     fn child_count (&self, node: u64) -> u64 {
         assert!(self.has_index(node));
 
-        let rank0_until_node = self.rank_select.rank_0(node-1).unwrap();
-        let rank1_until_node = self.rank_select.rank_1(node -1).unwrap();
-
-        let index_node_over = self.rank_select.select_0(rank0_until_node +1).unwrap();
-        let rank1_after_node = self.rank_select.rank_1(index_node_over).unwrap();
-
-        rank1_after_node - rank1_until_node
+        if !self.parenthesis[node] {
+            return 0;
+        } else {
+            self.next_0(node) - node
+        }
     }
 }
 
