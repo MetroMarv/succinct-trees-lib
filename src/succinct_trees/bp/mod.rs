@@ -2,9 +2,14 @@ use bv::{BitVec, Bits};
 use std::fmt;
 use super::SuccinctTreeFunctions;
 
-#[derive(Debug, Serialize, Deserialize)]
+
 pub struct BalancedParenthesis {
-    parenthesis: BitVec<u8>
+    parenthesis: BitVec<u8>,
+    blocksize: u64,
+    range_min_max_tree: RangeMinMaxTree,
+
+
+
     /* For fields added in future please add
      * #[serde(skip_deserializing,skip_serializing)]
      * annotation. So it's not (de)serialized.
@@ -92,9 +97,9 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
 impl RangeMinMaxTree {
 
-    pub fn new(tree: BalancedParenthesis, block_size: u64) -> RangeMinMaxTree {
+    pub fn new(parenthesis: &BitVec<u8>, block_size: u64) -> RangeMinMaxTree {
         let blksize = block_size;
-        let len = ((2*tree.parenthesis.len())/block_size) as usize;
+        let len = ((2*parenthesis.len())/block_size) as usize;
         let len_f = len as f64;
 
         // set vec length
@@ -117,8 +122,8 @@ impl RangeMinMaxTree {
             let mut min = 0;
             let mut qty = 0;
 
-            for j in 0..tree.parenthesis.len() - 1 {
-                if tree.parenthesis.get_bit(j) {
+            for j in 0..parenthesis.len() - 1 {
+                if parenthesis.get_bit(j) {
                     exc += 1;
                 } else {
                     exc -= 1;
@@ -166,19 +171,26 @@ impl RangeMinMaxTree {
 
     pub fn bwdsearch(_i: u64, _d: u64) {}
 
-    pub(crate) fn get_excess(&self) -> Vec<i64> {&self.excess}
+    pub(crate) fn get_excess(&self) -> &Vec<i64> {&self.excess}
 
-    pub(crate) fn get_minimum(&self) -> Vec<i64> {&self.minimum}
+    pub(crate) fn get_minimum(&self) -> &Vec<i64> {&self.minimum}
 
-    pub(crate) fn get_maximum(&self) -> Vec<i64> {&self.maximum}
+    pub(crate) fn get_maximum(&self) -> &Vec<i64> {&self.maximum}
 
-    pub(crate) fn get_quantity(&self) -> Vec<u64> {&self.quantity}
+    pub(crate) fn get_quantity(&self) -> &Vec<u64> {&self.quantity}
 
 }
 
 impl BalancedParenthesis {
-    pub fn new(parenthesis: BitVec<u8>) -> BalancedParenthesis {
-        BalancedParenthesis{parenthesis}
+
+    pub fn new_with_fixed_blocksize(parenthesis: BitVec<u8>) -> BalancedParenthesis {
+        let bp = BalancedParenthesis::new(parenthesis, 2);
+        bp
+    }
+
+    pub fn new(parenthesis: BitVec<u8>, blocksize: u64) -> BalancedParenthesis {
+        let range_min_max_tree = RangeMinMaxTree::new(&parenthesis, blocksize);
+        BalancedParenthesis{parenthesis, blocksize ,range_min_max_tree}
     }
 
     pub fn get_parenthesis(&self) -> &BitVec<u8>{
@@ -224,12 +236,13 @@ mod tests {
 
     pub fn example_tree() -> BalancedParenthesis{
         let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, false, false, false];
-        return BalancedParenthesis::new(parenthesis);
+        return BalancedParenthesis::new(parenthesis, 2);
     }
+
 
     pub fn empty_tree() -> BalancedParenthesis{
         let parenthesis: BitVec<u8> = bit_vec![];
-        return BalancedParenthesis::new(parenthesis);
+        return BalancedParenthesis::new(parenthesis, 0);
     }
 
     #[test]
@@ -239,7 +252,7 @@ mod tests {
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
 
-    #[test]
+    /*#[test]
     fn test_serialization () {
         let tree = example_tree();
 
@@ -248,7 +261,7 @@ mod tests {
         let deserialized: Result<BalancedParenthesis> = deserialize(&serialized[..]);
 
         assert_eq!(deserialized.unwrap().get_parenthesis().get_bit(3), false)
-    }
+    }*/
 
     #[test]
     fn test_is_leaf() {
@@ -386,6 +399,26 @@ mod tests {
         empty_tree().enclose(0);
     }
 
+    #[test]
+    fn  test_construct_rmm_tree() {
+        let tree = example_tree();
+        let range_min_max_tree = example_tree().range_min_max_tree;
 
+        // test excess
+        let vec_exc = vec![0, 2, 0, 0, -2, 2, -2, 0];
+        assert_eq!(*range_min_max_tree.get_excess(), vec_exc);
+
+        //test minimum
+        let vec_min = vec![0, 1, 0, 0, -2, 1, -2, 0];
+        assert_eq!(*range_min_max_tree.get_excess(), vec_min);
+
+        //test maximum
+        let vec_max = vec![0, 2, 1, 1, -1, 3, 1, 3];
+        assert_eq!(*range_min_max_tree.get_excess(), vec_max);
+
+        //test quantity
+        let vec_qty = vec![0, 1, 1, 1, 1, 1, 1, 1];
+        assert_eq!(*range_min_max_tree.get_excess(), vec_qty);
+    }
 
 }

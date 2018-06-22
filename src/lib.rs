@@ -22,7 +22,7 @@ mod tests {
     #[test]
     fn test_tree() {
         let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
-        let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
+        let tree = succinct_trees::bp::BalancedParenthesis::new_with_fixed_blocksize(parenthesis);
 
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }

@@ -72,7 +72,7 @@ pub mod parser {
         pub fn read_bp (&mut self) -> BalancedParenthesis {
             let bitvec = self.read_file_as_bitvec();
 
-            BalancedParenthesis::new(bitvec)
+            BalancedParenthesis::new_with_fixed_blocksize(bitvec)
         }
 
         pub fn read_louds (&mut self) -> Louds {
@@ -166,7 +166,7 @@ mod tests {
         let file = File::create(String::from(filename)).unwrap();
 
         let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
-        let tree = BalancedParenthesis::new(parenthesis);
+        let tree = BalancedParenthesis::new_with_fixed_blocksize(parenthesis);
 
         //### When
         let mut parser = TreeParser::new(file);
