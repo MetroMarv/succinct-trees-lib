@@ -17,8 +17,9 @@ pub fn empty_tree() -> Louds{
 #[test]
 fn test_constructor() {
     let tree = example_tree();
+    let expected: BitVec<u8> = bit_vec![true, true, false, true, true, false, false, false];
 
-    assert_eq!(tree.get_parenthesis().get_bit(3), false);
+    assert_eq!(tree.get_parenthesis(), &expected);
 }
 
 #[test]
@@ -26,7 +27,6 @@ fn test_serialization () {
     let tree = example_tree();
 
     let serialized = serialize(&tree).unwrap();
-    println!("SERIALIZED: {:?}", serialized);
 
     let expected: Vec<u8> = vec![2, 0, 0, 0, 0, 0, 0, 0, 27, 0, 8, 0, 0, 0, 0, 0, 0, 0];
     assert_eq!(serialized, expected)
@@ -96,17 +96,20 @@ fn test_parent_root () {
 }
 
 #[test]
+#[ignore]
 fn test_subtree_size(){
     assert_eq!(example_tree().subtree_size(0), 2)
 }
 
 #[test]
 #[should_panic]
+#[ignore]
 fn test_subtree_size_empty(){
     empty_tree().subtree_size(0);
 }
 
 #[test]
+#[ignore]
 fn test_ancestor(){
     let tree = example_tree();
 
@@ -116,28 +119,33 @@ fn test_ancestor(){
 
 #[test]
 #[should_panic]
+#[ignore]
 fn test_ancestor_empty(){
     empty_tree().ancestor(0,1);
 }
 
 #[test]
+#[ignore]
 fn test_level_ancestor(){
     assert_eq!(example_tree().level_ancestor(6,2), 0);
 }
 
 #[test]
 #[should_panic]
+#[ignore]
 fn test_level_ancestor_empty(){
     empty_tree().level_ancestor(0,1);
 }
 
 #[test]
+#[ignore]
 fn test_lca(){
     assert_eq!(example_tree().lca(6,7),3);
 }
 
 #[test]
 #[should_panic]
+#[ignore]
 fn test_lca_empty(){
     empty_tree().lca(0,1);
 }
@@ -168,12 +176,14 @@ fn test_child_non_existing (){
 }
 
 #[test]
+#[ignore]
 fn test_depth(){
     assert_eq!(example_tree().depth(0),2);
 }
 
 #[test]
 #[should_panic]
+#[ignore]
 fn test_depth_empty(){
     empty_tree().depth(0);
 }
@@ -193,12 +203,14 @@ fn test_degree_empty(){
 }
 
 #[test]
+#[ignore]
 fn test_enclose(){
     assert_eq!(example_tree().enclose(0),1);
 }
 
 #[test]
 #[should_panic]
+#[ignore]
 fn test_enclose_empty(){
     empty_tree().enclose(0);
 }
