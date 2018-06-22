@@ -44,16 +44,6 @@ impl Louds {
         let message = String::from(format!("Couldn't determine select_0 from index {}", rank));
         self.rank_select.select_0(rank).expect(&message)
     }
-
-    fn child_count (&self, node: u64) -> u64 {
-        assert!(self.has_index(node));
-
-        if !self.parenthesis[node] {
-            return 0;
-        } else {
-            self.next_0(node) - node
-        }
-    }
 }
 
 impl SuccinctTreeFunctions for Louds{
@@ -126,7 +116,7 @@ impl SuccinctTreeFunctions for Louds{
     fn child(&self, node:u64, index:u64) -> Option<u64>{
         assert!(self.has_index(node));
 
-        if self.child_count(node) < index +1  {
+        if self.degree(node) < index +1  {
             return None;
         }
 
@@ -149,6 +139,10 @@ impl SuccinctTreeFunctions for Louds{
 
     fn degree(&self, node:u64) -> u64{
         assert!(self.has_index(node));
+
+        if !self.parenthesis[node] {
+            return 0;
+        }
 
         self.next_0(node) - node
     }

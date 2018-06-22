@@ -33,15 +33,6 @@ fn test_constructor() {
 //    }
 
 #[test]
-fn test_child_count () {
-    let tree = example_tree();
-
-    assert_eq!(tree.child_count(1), 1);
-    assert_eq!(tree.child_count(3), 2);
-    assert_eq!(tree.child_count(6), 0);
-}
-
-#[test]
 fn test_is_leaf(){
     let tree = example_tree();
 
@@ -181,7 +172,10 @@ fn test_depth_empty(){
 
 #[test]
 fn test_degree(){
-    assert_eq!(example_tree().degree(3),2);
+    let tree = example_tree();
+
+    assert_eq!(tree.degree(3), 2);
+    assert_eq!(tree.degree(6), 0)
 }
 
 #[test]
