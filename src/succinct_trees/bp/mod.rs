@@ -89,7 +89,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
 
 impl RangeMinMaxTree {
-    
+
     pub fn new(tree: BalancedParenthesis, block_size: u64) -> RangeMinMaxTree {
         let len = ((2*tree.parenthesis.len())/block_size) as usize;
         let len_f = len as f64;
@@ -161,6 +161,13 @@ impl RangeMinMaxTree {
 
     pub fn bwdsearch(_i: u64, _d: u64) {}
 
+    pub(crate) fn get_excess(&self) -> Vec<i64> {&self.excess}
+
+    pub(crate) fn get_minimum(&self) -> Vec<i64> {&self.minimum}
+
+    pub(crate) fn get_maximum(&self) -> Vec<i64> {&self.maximum}
+
+    pub(crate) fn get_quantity(&self) -> Vec<u64> {&self.quantity}
 
 }
 
@@ -373,5 +380,7 @@ mod tests {
     fn test_enclose_empty(){
         empty_tree().enclose(0);
     }
+
+
 
 }
