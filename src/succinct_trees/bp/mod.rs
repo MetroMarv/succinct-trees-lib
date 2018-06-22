@@ -1,8 +1,9 @@
 use bv::{BitVec, Bits};
 use std::fmt;
 use super::SuccinctTreeFunctions;
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 pub struct BalancedParenthesis {
     parenthesis: BitVec<u8>
     /* For fields added in future please add
@@ -149,6 +150,26 @@ impl fmt::Display for BalancedParenthesis {
     }
 }
 
+impl Serialize for BalancedParenthesis {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        self.get_parenthesis().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for BalancedParenthesis {
+    fn deserialize<D>(deserializer: D) -> Result<BalancedParenthesis, D::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        let parenthesis = BitVec::deserialize(deserializer)?;
+
+        Ok(BalancedParenthesis::new(parenthesis))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -179,10 +200,22 @@ mod tests {
         let tree = example_tree();
 
         let serialized = serialize(&tree).unwrap();
+        print!("SERIALIZED: {:?}", serialized);
 
-        let deserialized: Result<BalancedParenthesis> = deserialize(&serialized[..]);
+        let expected: Vec<u8> = vec![2, 0, 0, 0, 0, 0, 0, 0, 23, 0, 8, 0, 0, 0, 0, 0, 0, 0];
+        assert_eq!(serialized, expected);
+    }
 
-        assert_eq!(deserialized.unwrap().get_parenthesis().get_bit(3), false)
+    #[test]
+    fn test_deserialization () {
+        let serialized = [2, 0, 0, 0, 0, 0, 0, 0, 23, 0, 8, 0, 0, 0, 0, 0, 0, 0];
+
+
+        let result: BalancedParenthesis = deserialize(&serialized).unwrap();
+
+        let tree = example_tree();
+        let expected = tree.get_parenthesis();
+        assert_eq!(result.get_parenthesis(), expected);
     }
 
     #[test]
