@@ -1,6 +1,7 @@
 use super::*;
 use bv::Bits;
 use succinct_trees::SuccinctTreeFunctions;
+use bincode::serialize;
 
 
 pub fn example_tree() -> Louds{
@@ -20,17 +21,13 @@ fn test_constructor() {
     assert_eq!(tree.get_parenthesis().get_bit(3), false);
 }
 
-//    #[test]
-//    fn test_serialization () {
-//        let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
-//        let tree = Louds::new(parenthesis);
-//
-//        let serialized = serialize(&tree).unwrap();
-//
-//        let deserialized: Result<Louds> = deserialize(&serialized[..]).unwrap();
-//
-//        assert_eq!(deserialized.get_parenthesis().get_bit(3), false)
-//    }
+#[test]
+fn test_serialization () {
+    let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
+    let tree = Louds::new(parenthesis);
+
+    let serialized = serialize(&tree).unwrap();
+}
 
 #[test]
 fn test_is_leaf(){

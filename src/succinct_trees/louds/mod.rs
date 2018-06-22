@@ -2,6 +2,8 @@ use bv::{BitVec, Bits};
 use std::fmt;
 use super::SuccinctTreeFunctions;
 use bio::data_structures::rank_select::RankSelect;
+use serde::{Serialize, Serializer};
+use serde::ser::SerializeSeq;
 
 pub struct Louds {
     parenthesis: BitVec<u8>,
@@ -165,6 +167,22 @@ impl fmt::Display for Louds {
             }
         }
         write!(f, "LOUDS-Tree: {}", parenthesis_expression)
+    }
+}
+
+impl Serialize for Louds {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        let len = Some(self.parenthesis.len() as usize);
+        let mut seq = serializer.serialize_seq(len)?;
+
+        for i in 0..self.parenthesis.len() -1 {
+            seq.serialize_element(&self.parenthesis[i]);
+        }
+
+        seq.end()
     }
 }
 
