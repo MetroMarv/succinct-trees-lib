@@ -15,3 +15,7 @@ debugger.xml
 succinct-trees-lib.iml
 ide.general.xml
 git.xml
+
+test_parser_read\.txt
+
+test_parser_write\.txt
