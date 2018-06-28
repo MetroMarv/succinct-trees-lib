@@ -209,7 +209,7 @@ impl BalancedParenthesis {
     fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
         let mut _k :u64 = _i/self.blocksize;//TODO: aufrunden
         let mut excess_i :u64 = BalancedParenthesis::excess(&self,_i);
-        for j in _i+1.. _k*self.blocksize {
+        for j in _i+1.. _k*self.blocksize{ //TODO this does not seem correct
             if excess_i as i64 +_d  == BalancedParenthesis::excess(&self,j) as i64{
                 return j;
             }
@@ -234,7 +234,7 @@ impl BalancedParenthesis {
                     _d = _d - self.range_min_max_tree.excess[_v2 as usize];
                     return BalancedParenthesis::step_2(&self,_v/2, _d);
                 }
-            }else{ //does not seem right
+            }else{ //TODO: is this really what happens in this case?
                 return BalancedParenthesis::step_2(&self,_v/2, _d);
             }
         }
@@ -242,7 +242,13 @@ impl BalancedParenthesis {
 
     fn step_3(&self,_v :u64,mut _d :i64) -> u64{
         if BalancedParenthesis::is_leaf(&self,_v){
-        return 0; //TODO:
+            let mut excess :u64 = 0;
+            for j in _v+1.. _v*self.blocksize{ //TODO: is this really the right block?
+                if self.range_min_max_tree.excess[_v as usize] as i64 +_d  == BalancedParenthesis::excess(&self,_v) as i64{
+                    excess = j;
+                }
+            }
+            return excess;
         }else{
             let _v_l = 2*_v;
             let _v_r = 2*_v +1;
