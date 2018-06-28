@@ -207,9 +207,10 @@ impl BalancedParenthesis {
     }
 
     fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
-        let mut _k :u64 = _i/self.blocksize;//TODO: aufrunden
+        let _b = self.blocksize;
+        let mut _k :u64 = BalancedParenthesis::division_round_up(_i,_b);
         let mut excess_i :u64 = BalancedParenthesis::excess(&self,_i);
-        for j in _i+1.. _k*self.blocksize{ //TODO this does not seem correct
+        for j in _i+1.. _k*_b{ //TODO this does not seem correct
             if excess_i as i64 +_d  == BalancedParenthesis::excess(&self,j) as i64{
                 return j;
             }
@@ -249,20 +250,28 @@ impl BalancedParenthesis {
                 }
             }
             return excess;
-        }else{
-            let _v_l = 2*_v;
-            let _v_r = 2*_v +1;
-            let min :i64 = self.range_min_max_tree.minimum[_v_l as usize];
-            let max :i64 = self.range_min_max_tree.maximum[_v_r as usize];
-            if min <= _d && _d <=max {
-               return BalancedParenthesis::step_3(&self,_v_l,_d);
-
-            }else{
-                _d = _d -self.range_min_max_tree.excess[_v_l as usize];
-                return BalancedParenthesis::step_3(&self,_v_r,_d);
+        }else {
+            let _v_l = 2 * _v;
+            let _v_r = 2 * _v + 1;
+            let min: i64 = self.range_min_max_tree.minimum[_v_l as usize];
+            let max: i64 = self.range_min_max_tree.maximum[_v_r as usize];
+            if min <= _d && _d <= max {
+                return BalancedParenthesis::step_3(&self, _v_l, _d);
+            } else {
+                _d = _d - self.range_min_max_tree.excess[_v_l as usize];
+                return BalancedParenthesis::step_3(&self, _v_r, _d);
             }
         }
     }
+        fn division_round_up(_a :u64, _b :u64) -> u64{
+            if  _a%_b == 0{
+                return _a/_b;
+            }else{
+                return _a/_b +1 ;
+            }
+        }
+
+
 
     fn is_right_child(&self,_v :u64) -> bool{
         if _v == 0 || _v == 1 {
