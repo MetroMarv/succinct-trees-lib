@@ -45,6 +45,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         return None;
     }
 
+
     fn next_sibling(&self,_lf:u64) -> u64{
         unimplemented!();
     }
@@ -89,8 +90,10 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     }
     
     fn depth(&self,_lf:u64) -> u64{
-        self.excess(_lf)
+        self.excess(_lf) as u64
     }
+
+
 
 }
 
@@ -165,12 +168,6 @@ impl RangeMinMaxTree {
 
     }
 
-    pub fn fwdsearch(_i: u64, mut _d: i64) {}
-
-
-
-    pub fn bwdsearch(_i: u64, _d: u64) {}
-
     pub(crate) fn get_excess(&self) -> &Vec<i64> {&self.excess}
 
     pub(crate) fn get_minimum(&self) -> &Vec<i64> {&self.minimum}
@@ -208,6 +205,90 @@ impl BalancedParenthesis {
         }
         count
     }
+
+    fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
+        let mut _k :u64 = _i/self.blocksize;//TODO: aufrunden
+        let mut excess_i :u64 = BalancedParenthesis::excess(&self,_i);
+        for j in _i+1.. _k*self.blocksize {
+            if excess_i as i64 +_d  == BalancedParenthesis::excess(&self,j) as i64{
+                return j;
+            }
+
+        }
+        _d = _d - (self.range_min_max_tree.excess[(_k*self.blocksize) as usize] - self.range_min_max_tree.excess[_i as usize]);
+        return BalancedParenthesis::step_2(&self,_k,_d);
+    }
+
+    fn step_2(&self, mut _v :u64, mut _d: i64) -> u64 {
+        if BalancedParenthesis::is_right_child(&self,_v) {
+           return BalancedParenthesis::step_2(&self,_v/2,_d);
+        }else {
+            if BalancedParenthesis::has_right_sibling(&self,_v){
+                let _v2 :u64 = _v +1;
+                let min :i64 = self.range_min_max_tree.minimum[_v2 as usize];
+                let max :i64 = self.range_min_max_tree.maximum[_v2 as usize];
+                if min <= _d && _d <= max{
+                    return BalancedParenthesis::step_3(&self,_v2,_d);
+
+                }else{
+                    _d = _d - self.range_min_max_tree.excess[_v2 as usize];
+                    return BalancedParenthesis::step_2(&self,_v/2, _d);
+                }
+            }else{ //does not seem right
+                return BalancedParenthesis::step_2(&self,_v/2, _d);
+            }
+        }
+    }
+
+    fn step_3(&self,_v :u64,mut _d :i64) -> u64{
+        if BalancedParenthesis::is_leaf(&self,_v){
+        return 0; //TODO:
+        }else{
+            let _v_l = 2*_v;
+            let _v_r = 2*_v +1;
+            let min :i64 = self.range_min_max_tree.minimum[_v_l as usize];
+            let max :i64 = self.range_min_max_tree.maximum[_v_r as usize];
+            if min <= _d && _d <=max {
+               return BalancedParenthesis::step_3(&self,_v_l,_d);
+
+            }else{
+                _d = _d -self.range_min_max_tree.excess[_v_l as usize];
+                return BalancedParenthesis::step_3(&self,_v_r,_d);
+            }
+        }
+    }
+
+    fn is_right_child(&self,_v :u64) -> bool{
+        if _v == 0 || _v == 1 {
+            return false;
+        }
+            else{
+                return _v%2 == 1;
+            }
+    }
+
+    fn is_left_child(&self,_v :u64) -> bool{
+        if _v == 0 || _v == 1 {
+            return false;
+        }
+            else{
+                return _v%2 == 0;
+            }
+    }
+
+    fn has_right_sibling(&self,_v :u64) -> bool{
+        return self.range_min_max_tree.excess.len() -1 == _v as usize;
+    }
+
+    fn is_leaf(&self,_v :u64) -> bool{
+        return 2*_v as usize >self.range_min_max_tree.excess.len() -1;
+    }
+
+
+
+
+
+    pub fn bwdsearch(_i: u64, _d: u64) {}
 }
 
 impl fmt::Display for BalancedParenthesis {
