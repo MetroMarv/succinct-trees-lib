@@ -208,10 +208,6 @@ impl BalancedParenthesis {
         count
     }
 
-    fn bwdsearch(&self,_i: u64, _d: i64) -> u64 {
-        unimplemented!();
-    }
-
     fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
         let _b = self.blocksize;
         let mut _k :u64 = BalancedParenthesis::division_round_up(_i,_b);
