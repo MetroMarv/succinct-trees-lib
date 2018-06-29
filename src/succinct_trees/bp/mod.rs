@@ -557,7 +557,7 @@ mod tests {
     #[test]
     fn  test_construct_rmm_tree() {
         let tree = example_tree();
-        let range_min_max_tree = example_tree().range_min_max_tree;
+        let range_min_max_tree = tree.range_min_max_tree;
 
         // test excess
         let vec_exc = vec![0, 2, 0, 0, -2, 2, -2, 0];
