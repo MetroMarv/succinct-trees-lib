@@ -120,7 +120,7 @@ impl RangeMinMaxTree {
         let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity, blksize};
 
 
-        let mut row = 1;
+        let mut row:u32 = 1;
 
         for i in 1..len_f.log2().floor() as u64 {
             let mut block_count = 0;
@@ -149,7 +149,7 @@ impl RangeMinMaxTree {
                     qty += 1;
                 }
 
-                if block_count <= block_size {
+                if block_count <= row*block_size as u32{
                     block_count += 1;
                 } else {
                     rmm.excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
