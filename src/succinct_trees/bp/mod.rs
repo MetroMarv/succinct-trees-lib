@@ -268,7 +268,7 @@ impl BalancedParenthesis {
             let mut excess :u64 = 0;
             let _b = self.blocksize;
             let _k :u64 = BalancedParenthesis::division_round_up(_v,_b);
-            for j in _v-1.. (_k-1)*_b{
+            for j in _v+1.._k*_b{
                 if self.range_min_max_tree.excess[_v as usize] as i64 +_d  == self.range_min_max_tree.excess[_v as usize] as i64{
                     excess = j;
                 }
@@ -292,7 +292,7 @@ impl BalancedParenthesis {
             let mut excess :u64 = 0;
             let _b = self.blocksize;
             let _k :u64 = BalancedParenthesis::division_round_up(_v,_b);
-            for j in _v+1.. _k*_b{
+            for j in _v-1.. (_k-1)*_b{
                 if self.range_min_max_tree.excess[_v as usize] as i64 +_d  == self.range_min_max_tree.excess[_v as usize] as i64{
                     excess = j;
                 }
