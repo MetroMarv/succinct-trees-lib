@@ -4,6 +4,7 @@ extern crate serde;
 #[macro_use]
 extern crate serde_derive;
 extern crate bincode;
+extern crate bio;
 
 pub mod succinct_trees;
 
@@ -20,8 +21,8 @@ mod tests {
 
     #[test]
     fn test_tree() {
-        let parenthesis: BitVec= bit_vec![true, true, true, false, true, false, false, false];
-        let tree = succinct_trees::bp::BalancedParenthesis::new(parenthesis);
+        let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
+        let tree = succinct_trees::bp::BalancedParenthesis::new_with_fixed_blocksize(parenthesis);
 
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
