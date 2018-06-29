@@ -85,7 +85,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn level_ancestor(&self,_lf:u64, _lf2:u64) -> u64{
-        unimplemented!();
+        self.bwdsearch(_lf, -_lf2 as i64 - 1) + 1
     }
     fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
