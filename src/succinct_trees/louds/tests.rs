@@ -72,6 +72,14 @@ fn test_next_sibling(){
 }
 
 #[test]
+fn test_next_sibling_not_existing(){
+    let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, true, false, false, false, false];
+    let tree =  Louds::new(parenthesis);
+
+    assert_eq!(tree.next_sibling(4), 7);
+}
+
+#[test]
 #[should_panic]
 fn test_next_sibling_empty(){
     empty_tree().next_sibling(6);
@@ -212,4 +220,23 @@ fn test_enclose(){
 #[ignore]
 fn test_enclose_empty(){
     empty_tree().enclose(0);
+}
+
+#[test]
+fn test_get_representing_true() {
+    let tree = example_tree();
+
+    assert_eq!(tree.get_representing_true(3), 1);
+    assert_eq!(tree.get_representing_true(6), 3);
+    assert_eq!(tree.get_representing_true(7), 4);
+}
+
+#[test]
+fn test_has_next_sibling() {
+    let tree = example_tree();
+
+    assert_eq!(tree.has_next_sibling(3), false);
+    assert_eq!(tree.has_next_sibling(6), true);
+    assert_eq!(tree.has_next_sibling(7), false);
+    assert_eq!(tree.has_next_sibling(1), false);
 }

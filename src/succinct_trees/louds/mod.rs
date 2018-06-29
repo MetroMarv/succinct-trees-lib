@@ -10,9 +10,8 @@ pub struct Louds {
 
 impl Louds {
     pub fn new(parenthesis: BitVec<u8>) -> Louds {
-        // TODO: calculate block size floor(log(n)^2/32)
         let length_f = parenthesis.len() as f64;
-        let blocksize = (length_f.log2().powi(2)/32.0).floor() as usize;
+        let blocksize = (length_f.log2().powi(2) / 32.0).ceil() as usize;
 
         Louds::new_blocksize(parenthesis, blocksize)
     }
@@ -47,6 +46,28 @@ impl Louds {
         let message = String::from(format!("Couldn't determine select_0 from index {}", rank));
         self.rank_select.select_0(rank).expect(&message)
     }
+
+    fn get_representing_true(&self, node: u64) -> u64 {
+        assert!(node > 0);
+        assert!(self.has_index(node));
+
+        let rank = self.rank_select.rank_0(node - 1).unwrap();
+        println!("Rank: {}", rank);
+        self.rank_select.select_1(rank +1).unwrap()
+    }
+
+    fn has_next_sibling(&self, node: u64 ) -> bool {
+        assert!(node > 0);
+        assert!(self.has_index(node));
+
+        if node == 1 {
+            return false;
+        }
+
+        let rep_true_index = self.get_representing_true(node);
+
+        self.rank_select.bits().get_bit(rep_true_index + 1)
+    }
 }
 
 impl SuccinctTreeFunctions for Louds{
@@ -67,9 +88,15 @@ impl SuccinctTreeFunctions for Louds{
     fn next_sibling(&self, node:u64) -> u64{
         assert!(self.has_index(node));
 
+        if !self.has_next_sibling(node) {
+            // TODO: Return Optional.None when changed to optional
+            return 0;
+        }
+
         let y = self.rank_select.rank_0(node -1).unwrap() + 1;
 
-        let inner = self.rank_select.select_1(y).unwrap() + 1;
+        let inner = self.rank_select.rank_1(self.rank_select.select_1(y).unwrap()).unwrap() + 1;
+
         let message = format!("Couldn't determine select_0 from index {}", inner);
         self.rank_select.select_0(inner).expect(&message)
     }
