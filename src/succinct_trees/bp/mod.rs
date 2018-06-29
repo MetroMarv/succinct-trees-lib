@@ -8,8 +8,6 @@ pub struct BalancedParenthesis {
     blocksize: u64,
     range_min_max_tree: RangeMinMaxTree,
 
-
-
     /* For fields added in future please add
      * #[serde(skip_deserializing,skip_serializing)]
      * annotation. So it's not (de)serialized.
@@ -45,12 +43,16 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         return None;
     }
 
-
-    fn next_sibling(&self,_lf:u64) -> u64{
-        unimplemented!();
+    fn next_sibling(&self,_lf:u64) -> Option<u64>{
+        let s = self.fwdsearch(_lf, -1) + 1;
+        if self.parenthesis.get_bit(s) == true {
+            return Some(s);
+        }
+        return None;
     }
+
     fn parent(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.bwdsearch(_lf, -2) + 1
     }
     fn rank(&self,_lf:u64) -> u64{
         unimplemented!();
@@ -68,7 +70,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn subtree_size(&self,_lf:u64) -> u64{
-        unimplemented!();
+        (self.fwdsearch(_lf, -1) - _lf + 1)/2
     }
     fn pre_rank(&self,_lf:u64) -> u64{
         unimplemented!();
@@ -206,6 +208,10 @@ impl BalancedParenthesis {
         count
     }
 
+    fn bwdsearch(&self,_i: u64, _d: i64) -> u64 {
+        unimplemented!();
+    }
+
     fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
         let _b = self.blocksize;
         let mut _k :u64 = BalancedParenthesis::division_round_up(_i,_b);
@@ -299,11 +305,6 @@ impl BalancedParenthesis {
         return 2*_v as usize >self.range_min_max_tree.excess.len() -1;
     }
 
-
-
-
-
-    pub fn bwdsearch(_i: u64, _d: u64) {}
 }
 
 impl fmt::Display for BalancedParenthesis {
@@ -386,7 +387,7 @@ mod tests {
 
     #[test]
     fn test_next_sibling(){
-        assert_eq!(example_tree().next_sibling(2), 4);
+        assert_eq!(example_tree().next_sibling(2).unwrap(), 4);
     }
 
     #[test]

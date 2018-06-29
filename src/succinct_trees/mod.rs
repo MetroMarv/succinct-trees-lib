@@ -5,7 +5,7 @@ pub trait SuccinctTreeFunctions{
     fn has_index(&self, _:u64) -> bool;
     fn is_leaf(&self, _:u64) -> bool;
     fn first_child(&self,_: u64) -> Option<u64>;
-    fn next_sibling(&self,_: u64) -> u64;
+    fn next_sibling(&self,_: u64) -> Option<u64>;
     fn parent(&self,_: u64) -> u64;
     fn rank(&self,_: u64) -> u64;
     fn select(&self,_: u64) -> u64;

@@ -73,14 +73,14 @@ impl SuccinctTreeFunctions for Louds{
         self.child(node, 0)
     }
 
-    fn next_sibling(&self, node:u64) -> u64{
+    fn next_sibling(&self, node:u64) -> Option<u64>{
         assert!(self.has_index(node));
 
         let y = self.rank_select.rank_0(node -1).unwrap() + 1;
 
         let inner = self.rank_select.select_1(y).unwrap() + 1;
         let message = format!("Couldn't determine select_0 from index {}", inner);
-        self.rank_select.select_0(inner).expect(&message)
+        Some(self.rank_select.select_0(inner).expect(&message))
     }
 
     fn parent(&self, node:u64) -> u64{
@@ -247,7 +247,7 @@ mod tests {
 
     #[test]
     fn test_next_sibling(){
-        assert_eq!(example_tree().next_sibling(6), 7);
+        assert_eq!(example_tree().next_sibling(6).unwrap(), 7);
     }
 
     #[test]
