@@ -11,7 +11,14 @@ pub struct Louds {
 impl Louds {
     pub fn new(parenthesis: BitVec<u8>) -> Louds {
         // TODO: calculate block size floor(log(n)^2/32)
-        let rank_select = RankSelect::new(parenthesis.clone(), 4);
+        let length_f = parenthesis.len() as f64;
+        let blocksize = (length_f.log2().powi(2)/32.0).floor() as usize;
+
+        Louds::new_blocksize(parenthesis, blocksize)
+    }
+
+    pub fn new_blocksize (parenthesis: BitVec<u8>, blocksize: usize) -> Louds {
+        let rank_select = RankSelect::new(parenthesis.clone(), blocksize);
 
         Louds{rank_select}
     }

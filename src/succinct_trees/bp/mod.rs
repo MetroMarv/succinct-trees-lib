@@ -173,7 +173,7 @@ impl<'de> Deserialize<'de> for BalancedParenthesis {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bincode::{serialize, deserialize, Result };
+    use bincode::{serialize, deserialize };
     use bv::Bits;
     use succinct_trees::SuccinctTreeFunctions;
 

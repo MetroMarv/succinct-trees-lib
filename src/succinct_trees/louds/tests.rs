@@ -1,5 +1,4 @@
 use super::*;
-use bv::Bits;
 use succinct_trees::SuccinctTreeFunctions;
 use bincode::{serialize, deserialize};
 
