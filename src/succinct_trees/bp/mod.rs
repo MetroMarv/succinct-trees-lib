@@ -106,13 +106,17 @@ impl RangeMinMaxTree {
         let blksize = block_size;
         let len = ((2*parenthesis.len())/block_size) as usize;
         let len_f = len as f64;
-
         // set vec length
         let mut excess = Vec::with_capacity(len);
         let mut maximum = Vec::with_capacity(len);
         let mut minimum = Vec::with_capacity(len);
         let mut quantity = Vec::with_capacity(len);
-
+        for i in 0..len{
+            excess.push(0);
+            maximum.push(0);
+            minimum.push(0);
+            quantity.push(0);
+        }
         let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity, blksize};
 
 
@@ -148,10 +152,10 @@ impl RangeMinMaxTree {
                 if block_count <= block_size {
                     block_count += 1;
                 } else {
-                    rmm.excess.insert(len/(2_usize.pow(row)) + vec_count, exc);
-                    rmm.minimum.insert(len/(2_usize.pow(row)) + vec_count, min);
-                    rmm.maximum.insert(len/(2_usize.pow(row)) + vec_count, max);
-                    rmm.quantity.insert(len/(2_usize.pow(row)) + vec_count, qty);
+                    rmm.excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
+                    rmm.minimum[(len/(2_usize.pow(row)) + vec_count)] = min;
+                    rmm.maximum[(len/(2_usize.pow(row)) + vec_count)] = max;
+                    rmm.quantity[(len/(2_usize.pow(row)) + vec_count)] = qty;
 
                     vec_count += 1;
                     block_count = 0;
@@ -397,7 +401,7 @@ mod tests {
 
     pub fn empty_tree() -> BalancedParenthesis{
         let parenthesis: BitVec<u8> = bit_vec![];
-        return BalancedParenthesis::new(parenthesis, 0);
+        return BalancedParenthesis::new(parenthesis, 2);
     }
 
     #[test]
@@ -522,7 +526,7 @@ mod tests {
 
     #[test]
     fn test_depth(){
-        assert_eq!(example_tree().depth(0),2);
+        assert_eq!(example_tree().depth(0),0);
     }
 
     #[test]
