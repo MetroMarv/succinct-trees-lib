@@ -85,7 +85,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn level_ancestor(&self,_lf:u64, _lf2:u64) -> u64{
-        self.bwdsearch(_lf, -_lf2 as i64 - 1) + 1
+        self.bwdsearch(_lf, -(_lf2 as i64) - 1) + 1
     }
     fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
@@ -500,13 +500,13 @@ mod tests {
 
     #[test]
     fn test_lca(){
-        assert_eq!(example_tree().lca(0,1),0);
+        assert_eq!(example_tree().lca(2,4),0);
     }
 
     #[test]
     #[should_panic]
     fn test_lca_empty(){
-        empty_tree().lca(0,1);
+        empty_tree().lca(2,4);
     }
 
     #[test]
