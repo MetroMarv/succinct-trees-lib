@@ -131,7 +131,7 @@ impl RangeMinMaxTree {
             let mut min = 0;
             let mut qty = 0;
 
-            for j in 0..parenthesis.len() - 1 {
+            for j in 0..parenthesis.len().wrapping_sub(1) {
                 if parenthesis.get_bit(j) {
                     exc += 1;
                 } else {
@@ -240,8 +240,9 @@ impl BalancedParenthesis {
                     _d = _d - self.range_min_max_tree.excess[_v2 as usize];
                     return BalancedParenthesis::fw_step_2(&self,_v/2, _d);
                 }
-            }else{ //TODO: is this really what happens in this case?
-                return BalancedParenthesis::fw_step_2(&self,_v/2, _d);
+            }else{ //TODO: What do we return in this case????
+                //return BalancedParenthesis::fw_step_2(&self,_v/2, _d);
+                return 0;
             }
         }
     }
@@ -261,8 +262,9 @@ impl BalancedParenthesis {
                     _d = _d - self.range_min_max_tree.excess[_v2 as usize];
                     return BalancedParenthesis::bw_step_2(&self,_v/2, _d);
                 }
-            }else{ //TODO: is this really what happens in this case?
-                return BalancedParenthesis::bw_step_2(&self,_v/2, _d);
+            }else{ //TODO: What do we return in this case????
+                //return BalancedParenthesis::bw_step_2(&self,_v/2, _d);
+                return 0;
             }
         }
     }
@@ -358,7 +360,7 @@ impl BalancedParenthesis {
     pub fn bwdsearch(&self,_i: u64,mut _d: i64) -> u64{
         let _b = self.blocksize;
         let mut _k :u64 = BalancedParenthesis::division_round_up(_i,_b);
-        for j in _i-1.. (_k-1)*_b{
+        for j in _i.wrapping_sub(1).. (_k.wrapping_sub(1)).wrapping_mul(_b){
             if self.range_min_max_tree.excess[_i as usize] as i64 +_d  == BalancedParenthesis::excess(&self,j) as i64{
                 return j;
             }
