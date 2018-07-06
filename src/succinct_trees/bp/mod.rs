@@ -120,53 +120,74 @@ impl RangeMinMaxTree {
         let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity, blksize};
 
 
-        let mut row:u32 = 1;
 
-        for i in 1..len_f.log2().floor() as u64 {
-            let mut block_count = 0;
+
+        println!("log(laenge) abgerudnet: {}", len_f.log2().floor());
+
+        for i in 1..(len_f.log2().floor() + (1 as f64)) as u64 {
+            let row: u32 = i as u32;
+            let mut block_count = 1;
             let mut vec_count = 0;
 
             let mut exc :i64 = 0;
             let mut max = 0;
             let mut min = 0;
             let mut qty = 0;
+            let mut is_first = true;
 
-            for j in 0..parenthesis.len().wrapping_sub(1) {
+            for j in 0..parenthesis.len() {
+
                 if parenthesis.get_bit(j) {
                     exc += 1;
                 } else {
                     exc -= 1;
                 }
 
-                if exc > max {
-                    max = exc;
-                }
+                println!("Excess: {}", exc);
 
-                if exc < min {
+                if !is_first {
+                    if exc > max {
+                        max = exc;
+                    }
+                    if exc < min {
+                        println!("Neues Minimum: {}", exc);
+                        min = exc;
+                        qty = 1;
+                    } else if exc == min {
+                        qty += 1;
+                    }
+                } else {
+                    println!("Erstes Minimum: {}", exc);
                     min = exc;
                     qty = 1;
-                } else if exc == min {
-                    qty += 1;
+                    max = exc;
+                    is_first = false;
                 }
 
-                if block_count <= row*block_size as u32{
+
+
+                if block_count < block_size.pow(row) as u32{
                     block_count += 1;
                 } else {
+
+                    println!("");
+                    println!("Minimum Eintragen: {}", min);
+                    println!("");
+
                     rmm.excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
                     rmm.minimum[(len/(2_usize.pow(row)) + vec_count)] = min;
                     rmm.maximum[(len/(2_usize.pow(row)) + vec_count)] = max;
                     rmm.quantity[(len/(2_usize.pow(row)) + vec_count)] = qty;
 
                     vec_count += 1;
-                    block_count = 0;
+                    block_count = 1;
                     exc = 0;
                     max = 0;
                     min = 0;
                     qty = 0;
+                    is_first = true;
                 }
             }
-
-            row += 1;
 
         }
 
@@ -581,20 +602,20 @@ mod tests {
         let range_min_max_tree = tree.range_min_max_tree;
 
         // test excess
-        let vec_exc = vec![0, 2, 0, 0, -2, 2, -2, 0];
+        let vec_exc = vec![0, 0, 2, -2, 2, 0, 0, -2];
         assert_eq!(*range_min_max_tree.get_excess(), vec_exc);
 
         //test minimum
-        let vec_min = vec![0, 1, 0, 0, -2, 1, -2, 0];
-        assert_eq!(*range_min_max_tree.get_excess(), vec_min);
+        let vec_min = vec![0, 0, 1, -2, 1, 0, 0, -2];
+        assert_eq!(*range_min_max_tree.get_minimum(), vec_min);
 
         //test maximum
-        let vec_max = vec![0, 2, 1, 1, -1, 3, 1, 3];
-        assert_eq!(*range_min_max_tree.get_excess(), vec_max);
+        let vec_max = vec![0, 3, 3, 1, 2, 1, 1, -1];
+        assert_eq!(*range_min_max_tree.get_maximum(), vec_max);
 
         //test quantity
         let vec_qty = vec![0, 1, 1, 1, 1, 1, 1, 1];
-        assert_eq!(*range_min_max_tree.get_excess(), vec_qty);
+        assert_eq!(*range_min_max_tree.get_quantity(), vec_qty);
     }
 
     #[test]
@@ -607,16 +628,16 @@ mod tests {
         assert_eq!(*range_min_max_tree.get_excess(), vec_exc);
 
         //test minimum
-        let vec_min = vec![0, 0, 0, 0, 0, 1, 2, 0];
-        assert_eq!(*range_min_max_tree.get_excess(), vec_min);
+        let vec_min = vec![0, 0, 0, -2, 0, 1, 0, -2];
+        assert_eq!(*range_min_max_tree.get_minimum(), vec_min);
 
         //test maximum
-        let vec_max = vec![0, 3, 2, 3, 1, 2, 3, 1];
-        assert_eq!(*range_min_max_tree.get_excess(), vec_max);
+        let vec_max = vec![0, 3, 2, 1, 1, 2, 1, -1];
+        assert_eq!(*range_min_max_tree.get_maximum(), vec_max);
 
         //test quantity
         let vec_qty = vec![0, 2, 1, 1, 1, 1, 1, 1];
-        assert_eq!(*range_min_max_tree.get_excess(), vec_qty);
+        assert_eq!(*range_min_max_tree.get_quantity(), vec_qty);
     }
     #[test]
     fn test_fwdsearch(){
