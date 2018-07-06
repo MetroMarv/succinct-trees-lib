@@ -4,7 +4,6 @@ use super::SuccinctTreeFunctions;
 
 
 pub struct BalancedParenthesis {
-    parenthesis: BitVec<u8>,
     blocksize: u64,
     range_min_max_tree: RangeMinMaxTree,
 
@@ -15,6 +14,7 @@ pub struct BalancedParenthesis {
 }
 
 pub struct RangeMinMaxTree {
+    parenthesis: BitVec<u8>,
     excess: Vec<i64>,
     maximum: Vec<i64>,
     minimum: Vec<i64>,
@@ -25,14 +25,14 @@ pub struct RangeMinMaxTree {
 
 impl SuccinctTreeFunctions for BalancedParenthesis{
     fn has_index(&self, index:u64) -> bool {
-      index < self.parenthesis.len()
+      index < self.range_min_max_tree.parenthesis.len()
     }
 
     fn is_leaf(&self, _lf:u64) -> bool{
-        if self.parenthesis.get_bit(_lf) {
-            !self.parenthesis.get_bit(_lf + 1)
+        if self.range_min_max_tree.parenthesis.get_bit(_lf) {
+            !self.range_min_max_tree.parenthesis.get_bit(_lf + 1)
         } else {
-            self.parenthesis.get_bit(_lf - 1)
+            self.range_min_max_tree.parenthesis.get_bit(_lf - 1)
         }
     }
 
@@ -45,7 +45,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
     fn next_sibling(&self,_lf:u64) -> Option<u64>{
         let s = self.range_min_max_tree.fwdsearch(_lf, -1) + 1;
-        if self.parenthesis.get_bit(s) == true {
+        if self.range_min_max_tree.parenthesis.get_bit(s) == true {
             return Some(s);
         }
         return None;
@@ -90,7 +90,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
     }
-    
+
     fn depth(&self,_lf:u64) -> u64{
         self.excess(_lf) as u64
     }
@@ -102,7 +102,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 
 impl RangeMinMaxTree {
 
-    pub fn new(parenthesis: &BitVec<u8>, block_size: u64) -> RangeMinMaxTree {
+    pub fn new(parenthesis: BitVec<u8>, block_size: u64) -> RangeMinMaxTree {
         let blksize = block_size;
         let len = ((2*parenthesis.len())/block_size) as usize;
         let len_f = len as f64;
@@ -117,8 +117,10 @@ impl RangeMinMaxTree {
             minimum.push(0);
             quantity.push(0);
         }
-        let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity, blksize};
 
+        if parenthesis.len() == 0 {
+            return RangeMinMaxTree{parenthesis, excess, maximum, minimum, quantity, blksize};
+        }
 
         for i in 1..(len_f.log2().floor() + (1 as f64)) as u64 {
             let row: u32 = i as u32;
@@ -132,6 +134,7 @@ impl RangeMinMaxTree {
             let mut is_first = true;
 
             for j in 0..parenthesis.len() {
+                println!("j: {}", i);
 
                 if parenthesis.get_bit(j) {
                     exc += 1;
@@ -166,12 +169,14 @@ impl RangeMinMaxTree {
                     block_count += 1;
                 } else {
 
+
                     println!("Excess wird eingetragen{}", exc);
 
-                    rmm.excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
-                    rmm.minimum[(len/(2_usize.pow(row)) + vec_count)] = min;
-                    rmm.maximum[(len/(2_usize.pow(row)) + vec_count)] = max;
-                    rmm.quantity[(len/(2_usize.pow(row)) + vec_count)] = qty;
+                    excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
+                    minimum[(len/(2_usize.pow(row)) + vec_count)] = min;
+                    maximum[(len/(2_usize.pow(row)) + vec_count)] = max;
+                    quantity[(len/(2_usize.pow(row)) + vec_count)] = qty;
+
 
                     vec_count += 1;
                     block_count = 1;
@@ -185,66 +190,89 @@ impl RangeMinMaxTree {
 
         }
 
-        rmm
-
+        RangeMinMaxTree{parenthesis, excess, maximum, minimum, quantity, blksize}
     }
 
     fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
         let _b = self.blksize;
-        let mut _k :u64 = self.division_round_up(_i,_b);
-        println!(" Hier {}", _k);
-        for j in _i+1.. _k*_b{
-            if self.excess[_i as usize] as i64 +_d  == self.excess[j as usize] as i64{
+        let mut _k :u64 =_i/_b;
+        let mut diff = 0;
+        for j in _i+1.. (_k+1)*_b{
+            println!("Suche in Block durch Schritt1");
+            if self.parenthesis[j]{
+                diff+=1;
+            }else{
+                diff-=1;
+            }
+            if _d  == diff {
                 return j;
             }
 
         }
-        _d = _d - (self.excess[(_k*self.blksize) as usize] - self.excess[_i as usize]);
+        _d = _d - diff;
         //TODO Knoten der k-ten Block beschreibt
-        return self.fw_step_2(_k+1,_d);
+        let node = self.parenthesis.len()/ 2 + _i/_b;
+        println!("Springe zu {}-ten Block: Schritt 2", node);
+        return self.fw_step_2(node,_d);
     }
 
-    fn fw_step_2(&self, mut _v :u64, mut _d: i64) -> u64 {
-        if self.is_right_child(_v) {
-            return self.fw_step_2(_v/2,_d);
+    fn fw_step_2(&self, mut block :u64, mut _d: i64) -> u64 {
+        if self.is_right_child(block) {
+            println!("Aufruf Schritt 2 Als RightChild : mit v {}", block/2);
+            return self.fw_step_2(block/2,_d);
         }else {
-            let _v2 :u64 = _v +1;
-            let min :i64 = self.minimum[_v2 as usize];
-            let max :i64 = self.maximum[_v2 as usize];
+            let right_sibling :u64 = block +1;
+            let min :i64 = self.minimum[right_sibling as usize];
+            let max :i64 = self.maximum[right_sibling as usize];
             if min <= _d && _d <= max{
-                return self.fw_step_3(_v2,_d);
+                println!("Aufruf Schritt 3 : mit v {}", right_sibling);
+                return self.fw_step_3(right_sibling,_d);
 
             }else{
-                _d = _d - self.excess[_v2 as usize];
-                println!("Aufruf Schritt 2 : mit v {}", _v);
-                return self.fw_step_2(&_v/2, _d);
+                _d = _d - self.excess[right_sibling as usize];
+                println!("Aufruf Schritt 2 : mit v {}", block/2);
+                return self.fw_step_2(&block/2, _d);
             }
         }
     }
 
-    fn fw_step_3(&self,_v :u64,mut _d :i64) -> u64{
-        if self.is_leaf(_v){
-            let mut excess :u64 = 0;
+    fn fw_step_3(&self,block :u64,mut _d :i64) -> u64{
+        println!("Schritt 3 mit v = {} d = {}",block,_d );
+        if self.is_leaf(block){
+            println!("Schritt 3 : Leaf");
             let _b = self.blksize;
-            let _k :u64 = self.division_round_up(_v,_b);
-            for j in _v+1.._k*_b{
-                if self.excess[_v as usize] as i64 +_d  == self.excess[_v as usize] as i64{
-                    excess = j;
+            let mut diff = 0;
+            let index = (block -self.parenthesis.len()/2)* _b;
+            for j in index..index+_b{
+                println!("Suche in Block durch Schritt 3");
+                println!("index = {}, block = {} , j = {}",index,block,j);
+                if self.parenthesis[j] {
+                    diff += 1;
+                } else {
+                    diff -= 1;
                 }
+                if _d == diff {
+                    return j;
+                }
+
             }
-            return excess;
         }else {
-            let _v_l = 2 * _v;
-            let _v_r = 2 * _v + 1;
+            let _v_l = 2 * block;
+            let _v_r = 2 * block + 1;
             let min: i64 = self.minimum[_v_l as usize];
-            let max: i64 = self.maximum[_v_r as usize];
+            let max: i64 = self.maximum[_v_l as usize];
+            println!("Min:  {}, Max: {}, d_:   {}", min, max, _d);
+
             if min <= _d && _d <= max {
+                println!("Schritt 3 if");
                 return self.fw_step_3( _v_l, _d);
             } else {
+                println!("Schritt 3 else");
                 _d = _d - self.excess[_v_l as usize];
                 return self.fw_step_3( _v_r, _d);
             }
         }
+        panic!("No result for fwdsearch");
     }
 
     fn is_right_child(&self,_v :u64) -> bool{
@@ -355,18 +383,18 @@ impl BalancedParenthesis {
     }
 
     pub fn new(parenthesis: BitVec<u8>, blocksize: u64) -> BalancedParenthesis {
-        let range_min_max_tree = RangeMinMaxTree::new(&parenthesis, blocksize);
-        BalancedParenthesis{parenthesis, blocksize ,range_min_max_tree}
+        let range_min_max_tree = RangeMinMaxTree::new(parenthesis, blocksize);
+        BalancedParenthesis{ blocksize ,range_min_max_tree}
     }
 
     pub fn get_parenthesis(&self) -> &BitVec<u8>{
-        &self.parenthesis
+        &self.range_min_max_tree.parenthesis
     }
 
     pub(crate) fn excess(&self, position: u64) -> u64 {
         let mut count = 0;
         for i in 0..position {
-            if self.parenthesis.get_bit(i) {
+            if self.range_min_max_tree.parenthesis.get_bit(i) {
                 count += 1;
             } else {
                 count -= 1;
@@ -380,8 +408,8 @@ impl BalancedParenthesis {
 impl fmt::Display for BalancedParenthesis {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut parenthesis_expression = String::from("");
-        for i in 0..self.parenthesis.len()-1 {
-            let bit = self.parenthesis.get_bit(i);
+        for i in 0..self.range_min_max_tree.parenthesis.len()-1 {
+            let bit = self.range_min_max_tree.parenthesis.get_bit(i);
 
             if bit {
                 parenthesis_expression.push_str("(");
@@ -643,14 +671,12 @@ mod tests {
 
     #[test]
     fn test_fwdsearch(){
-        let vec_exc = vec![0, 0, 2, -2, 0, 2, 0, -2];
-        let vec_min = vec![0, 0, 0, 0, 0, 1, 2, 0];
-        let vec_max = vec![0, 3, 2, 3, 1, 2, 3, 1];
-        let vec_qty = vec![0, 2, 1, 1, 1, 1, 1, 1];
+        let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, false, false, false];
 
-        let rmm: RangeMinMaxTree = RangeMinMaxTree{excess:vec_exc, minimum:vec_min,maximum:vec_max, quantity:vec_qty, blksize:2};
+        let rmm: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis,2);
 
-        assert_eq!(rmm.fwdsearch(2,-1), 7);
+        assert_eq!(rmm.fwdsearch(2,-1), 3);
+        assert_eq!(rmm.fwdsearch(2,0), 4);
 
     }
 
