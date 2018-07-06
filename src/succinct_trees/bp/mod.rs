@@ -120,10 +120,6 @@ impl RangeMinMaxTree {
         let mut rmm = RangeMinMaxTree{excess, maximum, minimum, quantity, blksize};
 
 
-
-
-        println!("log(laenge) abgerudnet: {}", len_f.log2().floor());
-
         for i in 1..(len_f.log2().floor() + (1 as f64)) as u64 {
             let row: u32 = i as u32;
             let mut block_count = 1;
@@ -143,21 +139,18 @@ impl RangeMinMaxTree {
                     exc -= 1;
                 }
 
-                println!("Excess: {}", exc);
 
                 if !is_first {
                     if exc > max {
                         max = exc;
                     }
                     if exc < min {
-                        println!("Neues Minimum: {}", exc);
                         min = exc;
                         qty = 1;
                     } else if exc == min {
                         qty += 1;
                     }
                 } else {
-                    println!("Erstes Minimum: {}", exc);
                     min = exc;
                     qty = 1;
                     max = exc;
@@ -169,11 +162,7 @@ impl RangeMinMaxTree {
                 if block_count < block_size.pow(row) as u32{
                     block_count += 1;
                 } else {
-
-                    println!("");
-                    println!("Minimum Eintragen: {}", min);
-                    println!("");
-
+                    
                     rmm.excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
                     rmm.minimum[(len/(2_usize.pow(row)) + vec_count)] = min;
                     rmm.maximum[(len/(2_usize.pow(row)) + vec_count)] = max;
