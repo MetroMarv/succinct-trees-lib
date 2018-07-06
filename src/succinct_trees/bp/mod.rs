@@ -44,7 +44,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     }
 
     fn next_sibling(&self,_lf:u64) -> Option<u64>{
-        let s = self.fwdsearch(_lf, -1) + 1;
+        let s = self.range_min_max_tree.fwdsearch(_lf, -1) + 1;
         if self.parenthesis.get_bit(s) == true {
             return Some(s);
         }
@@ -52,7 +52,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     }
 
     fn parent(&self,_lf:u64) -> u64{
-        self.bwdsearch(_lf, -2) + 1
+        self.range_min_max_tree.bwdsearch(_lf, -2) + 1
     }
     fn rank(&self,_lf:u64) -> u64{
         unimplemented!();
@@ -70,7 +70,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn subtree_size(&self,_lf:u64) -> u64{
-        (self.fwdsearch(_lf, -1) - _lf + 1)/2
+        (self.range_min_max_tree.fwdsearch(_lf, -1) - _lf + 1)/2
     }
     fn pre_rank(&self,_lf:u64) -> u64{
         unimplemented!();
@@ -85,7 +85,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn level_ancestor(&self,_lf:u64, _lf2:u64) -> u64{
-        self.bwdsearch(_lf, -(_lf2 as i64) - 1) + 1
+        self.range_min_max_tree.bwdsearch(_lf, -(_lf2 as i64) - 1) + 1
     }
     fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
@@ -174,6 +174,154 @@ impl RangeMinMaxTree {
 
     }
 
+    fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
+        let _b = self.blksize;
+        let mut _k :u64 = self.division_round_up(_i,_b);
+        println!(" Hier {}", _k);
+        for j in _i+1.. _k*_b{
+            if self.excess[_i as usize] as i64 +_d  == self.excess[j as usize] as i64{
+                return j;
+            }
+
+        }
+        _d = _d - (self.excess[(_k*self.blksize) as usize] - self.excess[_i as usize]);
+        //TODO Knoten der k-ten Block beschreibt
+        return self.fw_step_2(_k+1,_d);
+    }
+
+    fn fw_step_2(&self, mut _v :u64, mut _d: i64) -> u64 {
+        if self.is_right_child(_v) {
+            return self.fw_step_2(_v/2,_d);
+        }else {
+            let _v2 :u64 = _v +1;
+            let min :i64 = self.minimum[_v2 as usize];
+            let max :i64 = self.maximum[_v2 as usize];
+            if min <= _d && _d <= max{
+                return self.fw_step_3(_v2,_d);
+
+            }else{
+                _d = _d - self.excess[_v2 as usize];
+                println!("Aufruf Schritt 2 : mit v {}", _v);
+                return self.fw_step_2(&_v/2, _d);
+            }
+        }
+    }
+
+    fn fw_step_3(&self,_v :u64,mut _d :i64) -> u64{
+        if self.is_leaf(_v){
+            let mut excess :u64 = 0;
+            let _b = self.blksize;
+            let _k :u64 = self.division_round_up(_v,_b);
+            for j in _v+1.._k*_b{
+                if self.excess[_v as usize] as i64 +_d  == self.excess[_v as usize] as i64{
+                    excess = j;
+                }
+            }
+            return excess;
+        }else {
+            let _v_l = 2 * _v;
+            let _v_r = 2 * _v + 1;
+            let min: i64 = self.minimum[_v_l as usize];
+            let max: i64 = self.maximum[_v_r as usize];
+            if min <= _d && _d <= max {
+                return self.fw_step_3( _v_l, _d);
+            } else {
+                _d = _d - self.excess[_v_l as usize];
+                return self.fw_step_3( _v_r, _d);
+            }
+        }
+    }
+
+    fn is_right_child(&self,_v :u64) -> bool{
+        if _v == 0 || _v == 1 {
+            return false;
+        }
+            else{
+                return _v%2 == 1;
+            }
+    }
+
+    fn is_left_child(&self,_v :u64) -> bool{
+        if _v == 0 || _v == 1 {
+            return false;
+        }
+            else{
+                return _v%2 == 0;
+            }
+    }
+
+    fn division_round_up(&self,_a :u64, _b :u64) -> u64{
+        if  _a%_b == 0{
+            return _a/_b;
+        }else{
+            return _a/_b +1 ;
+        }
+    }
+
+    fn bw_step_2(&self, mut _v :u64, mut _d: i64) -> u64 {
+        if self.is_right_child(_v) {
+            return self.bw_step_2(_v/2,_d);
+        }else {
+                let _v2 :u64 = _v +1;
+                let min :i64 = self.minimum[_v2 as usize];
+                let max :i64 = self.maximum[_v2 as usize];
+                if min <= _d && _d <= max{
+                    return self.bw_step_3(_v2,_d);
+
+                }else{
+                    _d = _d - self.excess[_v2 as usize];
+                    return self.bw_step_2(_v/2, _d);
+                }
+        }
+    }
+
+
+    fn bw_step_3(&self,_v :u64,mut _d :i64) -> u64{
+        if self.is_leaf(_v){
+            let mut excess :u64 = 0;
+            let _b = self.blksize;
+            let _k :u64 = self.division_round_up(_v,_b);
+            for j in _v-1.. (_k-1)*_b{
+                if self.excess[_v as usize] as i64 +_d  == self.excess[_v as usize] as i64{
+                    excess = j;
+                }
+            }
+            return excess;
+        }else {
+            let _v_l = 2 * _v;
+            let _v_r = 2 * _v + 1;
+            let min: i64 = self.minimum[_v_l as usize];
+            let max: i64 = self.maximum[_v_r as usize];
+            if min <= _d && _d <= max {
+                return self.bw_step_3( _v_l, _d);
+            } else {
+                _d = _d - self.excess[_v_l as usize];
+                return self.bw_step_3(_v_r, _d);
+            }
+        }
+    }
+
+    fn is_leaf(&self,_v :u64) -> bool{
+        return 2*_v as usize >self.excess.len() -1;
+    }
+
+    fn has_right_sibling(&self,_v :u64) -> bool{
+        return self.excess.len() -1 == _v as usize;
+    }
+
+    pub fn bwdsearch(&self,_i: u64,mut _d: i64) -> u64{
+        let _b = self.blksize;
+        let mut _k :u64 = self.division_round_up(_i,_b);
+        for j in _i.wrapping_sub(1).. (_k.wrapping_sub(1)).wrapping_mul(_b){
+            if self.excess[_i as usize] as i64 +_d  == self.excess[j as usize] as i64{
+                return j;
+            }
+
+        }
+        _d = _d - (self.excess[(_k*self.blksize) as usize] - self.excess[_i as usize]);
+        return self.bw_step_2(_k+1,_d);
+    }
+
     pub(crate) fn get_excess(&self) -> &Vec<i64> {&self.excess}
 
     pub(crate) fn get_minimum(&self) -> &Vec<i64> {&self.minimum}
@@ -212,163 +360,25 @@ impl BalancedParenthesis {
         count
     }
 
-    fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
-        let _b = self.blocksize;
-        let mut _k :u64 = BalancedParenthesis::division_round_up(_i,_b);
-        for j in _i+1.. _k*_b{
-            if self.range_min_max_tree.excess[_i as usize] as i64 +_d  == self.range_min_max_tree.excess[j as usize] as i64{
-                return j;
-            }
-
-        }
-        _d = _d - (self.range_min_max_tree.excess[(_k*self.blocksize) as usize] - self.range_min_max_tree.excess[_i as usize]);
-        return BalancedParenthesis::fw_step_2(&self,_k,_d);
-    }
-
-    fn fw_step_2(&self, mut _v :u64, mut _d: i64) -> u64 {
-        if BalancedParenthesis::is_right_child(&self,_v) {
-           return BalancedParenthesis::fw_step_2(&self,_v/2,_d);
-        }else {
-            if BalancedParenthesis::has_right_sibling(&self,_v){
-                let _v2 :u64 = _v +1;
-                let min :i64 = self.range_min_max_tree.minimum[_v2 as usize];
-                let max :i64 = self.range_min_max_tree.maximum[_v2 as usize];
-                if min <= _d && _d <= max{
-                    return BalancedParenthesis::fw_step_3(&self,_v2,_d);
-
-                }else{
-                    _d = _d - self.range_min_max_tree.excess[_v2 as usize];
-                    return BalancedParenthesis::fw_step_2(&self,_v/2, _d);
-                }
-            }else{ //TODO: What do we return in this case????
-                //return BalancedParenthesis::fw_step_2(&self,_v/2, _d);
-                return 0;
-            }
-        }
-    }
-
-    fn bw_step_2(&self, mut _v :u64, mut _d: i64) -> u64 {
-        if BalancedParenthesis::is_right_child(&self,_v) {
-            return BalancedParenthesis::bw_step_2(&self,_v/2,_d);
-        }else {
-            if BalancedParenthesis::has_right_sibling(&self,_v){
-                let _v2 :u64 = _v +1;
-                let min :i64 = self.range_min_max_tree.minimum[_v2 as usize];
-                let max :i64 = self.range_min_max_tree.maximum[_v2 as usize];
-                if min <= _d && _d <= max{
-                    return BalancedParenthesis::bw_step_3(&self,_v2,_d);
-
-                }else{
-                    _d = _d - self.range_min_max_tree.excess[_v2 as usize];
-                    return BalancedParenthesis::bw_step_2(&self,_v/2, _d);
-                }
-            }else{ //TODO: What do we return in this case????
-                //return BalancedParenthesis::bw_step_2(&self,_v/2, _d);
-                return 0;
-            }
-        }
-    }
-
-    fn fw_step_3(&self,_v :u64,mut _d :i64) -> u64{
-        if BalancedParenthesis::is_leaf(&self,_v){
-            let mut excess :u64 = 0;
-            let _b = self.blocksize;
-            let _k :u64 = BalancedParenthesis::division_round_up(_v,_b);
-            for j in _v+1.._k*_b{
-                if self.range_min_max_tree.excess[_v as usize] as i64 +_d  == self.range_min_max_tree.excess[_v as usize] as i64{
-                    excess = j;
-                }
-            }
-            return excess;
-        }else {
-            let _v_l = 2 * _v;
-            let _v_r = 2 * _v + 1;
-            let min: i64 = self.range_min_max_tree.minimum[_v_l as usize];
-            let max: i64 = self.range_min_max_tree.maximum[_v_r as usize];
-            if min <= _d && _d <= max {
-                return BalancedParenthesis::fw_step_3(&self, _v_l, _d);
-            } else {
-                _d = _d - self.range_min_max_tree.excess[_v_l as usize];
-                return BalancedParenthesis::fw_step_3(&self, _v_r, _d);
-            }
-        }
-    }
-    fn bw_step_3(&self,_v :u64,mut _d :i64) -> u64{
-        if BalancedParenthesis::is_leaf(&self,_v){
-            let mut excess :u64 = 0;
-            let _b = self.blocksize;
-            let _k :u64 = BalancedParenthesis::division_round_up(_v,_b);
-            for j in _v-1.. (_k-1)*_b{
-                if self.range_min_max_tree.excess[_v as usize] as i64 +_d  == self.range_min_max_tree.excess[_v as usize] as i64{
-                    excess = j;
-                }
-            }
-            return excess;
-        }else {
-            let _v_l = 2 * _v;
-            let _v_r = 2 * _v + 1;
-            let min: i64 = self.range_min_max_tree.minimum[_v_l as usize];
-            let max: i64 = self.range_min_max_tree.maximum[_v_r as usize];
-            if min <= _d && _d <= max {
-                return BalancedParenthesis::bw_step_3(&self, _v_l, _d);
-            } else {
-                _d = _d - self.range_min_max_tree.excess[_v_l as usize];
-                return BalancedParenthesis::bw_step_3(&self, _v_r, _d);
-            }
-        }
-    }
-    fn division_round_up(_a :u64, _b :u64) -> u64{
-        if  _a%_b == 0{
-            return _a/_b;
-        }else{
-            return _a/_b +1 ;
-        }
-    }
-
-
-
-    fn is_right_child(&self,_v :u64) -> bool{
-        if _v == 0 || _v == 1 {
-            return false;
-        }
-            else{
-                return _v%2 == 1;
-            }
-    }
-
-    fn is_left_child(&self,_v :u64) -> bool{
-        if _v == 0 || _v == 1 {
-            return false;
-        }
-            else{
-                return _v%2 == 0;
-            }
-    }
-
-    fn has_right_sibling(&self,_v :u64) -> bool{
-        return self.range_min_max_tree.excess.len() -1 == _v as usize;
-    }
-
-    fn is_leaf(&self,_v :u64) -> bool{
-        return 2*_v as usize >self.range_min_max_tree.excess.len() -1;
-    }
 
 
 
 
 
-    pub fn bwdsearch(&self,_i: u64,mut _d: i64) -> u64{
-        let _b = self.blocksize;
-        let mut _k :u64 = BalancedParenthesis::division_round_up(_i,_b);
-        for j in _i.wrapping_sub(1).. (_k.wrapping_sub(1)).wrapping_mul(_b){
-            if self.range_min_max_tree.excess[_i as usize] as i64 +_d  == BalancedParenthesis::excess(&self,j) as i64{
-                return j;
-            }
 
-        }
-        _d = _d - (self.range_min_max_tree.excess[(_k*self.blocksize) as usize] - self.range_min_max_tree.excess[_i as usize]);
-        return BalancedParenthesis::bw_step_2(&self,_k,_d);
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 impl fmt::Display for BalancedParenthesis {
@@ -607,6 +617,18 @@ mod tests {
         //test quantity
         let vec_qty = vec![0, 2, 1, 1, 1, 1, 1, 1];
         assert_eq!(*range_min_max_tree.get_excess(), vec_qty);
+    }
+    #[test]
+    fn test_fwdsearch(){
+        let vec_exc = vec![0, 0, 2, -2, 0, 2, 0, -2];
+        let vec_min = vec![0, 0, 0, 0, 0, 1, 2, 0];
+        let vec_max = vec![0, 3, 2, 3, 1, 2, 3, 1];
+        let vec_qty = vec![0, 2, 1, 1, 1, 1, 1, 1];
+
+        let rmm: RangeMinMaxTree = RangeMinMaxTree{excess:vec_exc, minimum:vec_min,maximum:vec_max, quantity:vec_qty, blksize:2};
+
+        assert_eq!(rmm.fwdsearch(2,-1), 7);
+
     }
 
 
