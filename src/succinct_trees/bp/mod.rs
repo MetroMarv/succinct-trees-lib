@@ -118,6 +118,9 @@ impl RangeMinMaxTree {
             quantity.push(0);
         }
 
+        if parenthesis.len() == 0 {
+            return RangeMinMaxTree{parenthesis, excess, maximum, minimum, quantity, blksize};
+        }
 
         for i in 1..(len_f.log2().floor() + (1 as f64)) as u64 {
             let row: u32 = i as u32;
@@ -131,6 +134,7 @@ impl RangeMinMaxTree {
             let mut is_first = true;
 
             for j in 0..parenthesis.len() {
+                println!("j: {}", i);
 
                 if parenthesis.get_bit(j) {
                     exc += 1;
@@ -177,9 +181,8 @@ impl RangeMinMaxTree {
             }
 
         }
+
         RangeMinMaxTree{parenthesis, excess, maximum, minimum, quantity, blksize}
-
-
     }
 
     fn fwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
