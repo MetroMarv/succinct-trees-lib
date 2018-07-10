@@ -103,8 +103,9 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
 impl RangeMinMaxTree {
 
     pub fn new(parenthesis: BitVec<u8>, block_size: u64) -> RangeMinMaxTree {
-        let blksize = block_size;
-        let len = ((2*parenthesis.len())/block_size) as usize;
+        let blksize= block_size;
+        let next_power = (parenthesis.len() as f64).log2().ceil() as u32;
+        let len = ((2*(2_i32.pow(next_power)))/block_size as i32) as usize;
         let len_f = len as f64;
         // set vec length
         let mut excess = Vec::with_capacity(len);
@@ -134,7 +135,6 @@ impl RangeMinMaxTree {
             let mut is_first = true;
 
             for j in 0..parenthesis.len() {
-                println!("j: {}", i);
 
                 if parenthesis.get_bit(j) {
                     exc += 1;
@@ -160,13 +160,10 @@ impl RangeMinMaxTree {
                     is_first = false;
                 }
 
-                println!("akt. Exc {}", exc);
-
                 if block_count < (block_size*(2 as u64).pow(row - 1)) as u32{
 
-                    println!("{}", block_count);
-
                     block_count += 1;
+
                 } else {
 
 
@@ -434,6 +431,11 @@ mod tests {
         return BalancedParenthesis::new(parenthesis, 2);
     }
 
+    pub fn example_tree_incomplete() -> BalancedParenthesis{
+        let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, false, false, true, false, true, false, false];
+        return BalancedParenthesis::new(parenthesis, 2);
+    }
+
     pub fn example_tree_big() -> BalancedParenthesis{
         let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, false, false, true, false, true, true, false, true, false, false, false];
         return BalancedParenthesis::new(parenthesis, 4);
@@ -622,6 +624,28 @@ mod tests {
 
         //test quantity
         let vec_qty = vec![0, 1, 1, 1, 1, 1, 1, 1];
+        assert_eq!(*range_min_max_tree.get_quantity(), vec_qty);
+    }
+
+    #[test]
+    fn  test_construct_rmm_tree_incomplete() {
+        let tree = example_tree_incomplete();
+        let range_min_max_tree = tree.range_min_max_tree;
+
+        // test excess
+        let vec_exc = vec![0, 0, 2, -2, 2, 0, -2, 0, 2, 0, 0, 0, 0, -2, 0, 0];
+        assert_eq!(*range_min_max_tree.get_excess(), vec_exc);
+
+        //test minimum
+        let vec_min = vec![0, 0, 1, -2, 1, -1, -2, 0, 1, 0, 0, 0, 0, -2, 0, 0];
+        assert_eq!(*range_min_max_tree.get_minimum(), vec_min);
+
+        //test maximum
+        let vec_max = vec![0, 3, 3, 0, 3, 1, 0, 0, 2, 1, 1, 1, 1, -1, 0, 0];
+        assert_eq!(*range_min_max_tree.get_maximum(), vec_max);
+
+        //test quantity
+        let vec_qty = vec![0, 1, 2, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 0];
         assert_eq!(*range_min_max_tree.get_quantity(), vec_qty);
     }
 
