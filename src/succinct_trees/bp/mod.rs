@@ -434,11 +434,6 @@ mod tests {
         return BalancedParenthesis::new(parenthesis, 2);
     }
 
-    pub fn example_tree_2() -> BalancedParenthesis{
-        let parenthesis: BitVec<u8> = bit_vec![true, false, true, true, true, false, false, false];
-        return BalancedParenthesis::new(parenthesis, 2);
-    }
-
     pub fn example_tree_big() -> BalancedParenthesis{
         let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, false, false, true, false, true, true, false, true, false, false, false];
         return BalancedParenthesis::new(parenthesis, 4);
@@ -627,28 +622,6 @@ mod tests {
 
         //test quantity
         let vec_qty = vec![0, 1, 1, 1, 1, 1, 1, 1];
-        assert_eq!(*range_min_max_tree.get_quantity(), vec_qty);
-    }
-
-    #[test]
-    fn  test_construct_rmm_tree_2() {
-        let tree = example_tree_2();
-        let range_min_max_tree = tree.range_min_max_tree;
-
-        // test excess
-        let vec_exc = vec![0, 0, 2, -2, 0, 2, 0, -2];
-        assert_eq!(*range_min_max_tree.get_excess(), vec_exc);
-
-        //test minimum
-        let vec_min = vec![0, 0, 0, -2, 0, 1, 0, -2];
-        assert_eq!(*range_min_max_tree.get_minimum(), vec_min);
-
-        //test maximum
-        let vec_max = vec![0, 3, 2, 1, 1, 2, 1, -1];
-        assert_eq!(*range_min_max_tree.get_maximum(), vec_max);
-
-        //test quantity
-        let vec_qty = vec![0, 2, 1, 1, 1, 1, 1, 1];
         assert_eq!(*range_min_max_tree.get_quantity(), vec_qty);
     }
 
