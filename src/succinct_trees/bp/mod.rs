@@ -196,32 +196,28 @@ impl RangeMinMaxTree {
         let _b = self.blksize;
         let mut _k :u64 =_i/_b;
         let mut diff = 0;
-        let kb = (_k+1)*_b;
-        for j in _i+1.. kb+1{
-            println!("Suche in (Rest)-Block ({} ... {}) durch Schritt 1: j = {}",_i+1,kb, j);
-            if self.parenthesis[j-1]{
-                diff+=1;
-            }else{
-                diff-=1;
+        let kb = (_k+1)*_b +1; //anscheinend wird der Durchgang für den max index in rust nicht ausgeführt? -> deshalb +1
+        if(_i%_b !=0){
+            for j in _i+1.. kb {
+                println!("Suche in (Rest)-Block ({} ... {}) durch Schritt 1: j = {}", _i + 1, kb-1, j);
+                if self.parenthesis[j - 1] {
+                    diff += 1;
+                } else {
+                    diff -= 1;
+                }
+                println!("Unterschied gesucht: {}, gefunden: {}", _d, diff);
+                if _d == diff {
+                    println!("Excess gefunden: Gesuchter Index ist {}", j);
+                    return j;
+                }
             }
-            println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
-            if _d  == diff {
-                println!("Excess gefunden: Gesuchter Index ist {}",j);
-                return j;
-            }
-
         }
+
         _d = _d - diff;
         //TODO Knoten der k-ten Block beschreibt
         //println!("{} {}", self.excess.len()/ 2,_i/_b);
-        let node = (self.excess.len()/ 2 + (_i/_b) as usize) as u64;
+        let node = (self.excess.len()/ 2 + ((_i-1)/_b) as usize) as u64;
         println!("Aufruf Schritt 2 auf rmmT-Block {}", node);
-
-
-        /*println!("{} {}", self.index_to_block(node),self.parenthesis.len()/ 2);
-        let index = self.index_to_block(node) +self.parenthesis.len()/ 2;
-        println!("Index {} gehört zu Block {}", node,index);*/
-
         return self.fw_step_2(node,_d);
     }
 
@@ -243,6 +239,7 @@ impl RangeMinMaxTree {
             let right_sibling :u64 = block +1;
             let min :i64 = self.minimum[right_sibling as usize];
             let max :i64 = self.maximum[right_sibling as usize];
+            println!("Min: {}, Max: {}, d: {}", min, max,_d);
             if min <= _d && _d <= max{
                 println!("Aufruf Schritt 3 auf  {}-ten Block", right_sibling);
                 return self.fw_step_3(right_sibling,_d);
@@ -304,10 +301,6 @@ impl RangeMinMaxTree {
             }
     }
 
-    fn index_to_block(&self,_v :u64) -> u64{
-            return (_v / self.blksize);
-    }
-
     fn is_left_child(&self,_v :u64) -> bool{
         if _v == 0 || _v == 1 {
             return false;
@@ -325,47 +318,113 @@ impl RangeMinMaxTree {
         }
     }
 
-    fn bw_step_2(&self, mut _v :u64, mut _d: i64) -> u64 {
-        if self.is_right_child(_v) {
-            return self.bw_step_2(_v/2,_d);
-        }else {
-                let _v2 :u64 = _v +1;
-                let min :i64 = self.minimum[_v2 as usize];
-                let max :i64 = self.maximum[_v2 as usize];
-                if min <= _d && _d <= max{
-                    return self.bw_step_3(_v2,_d);
-
+    fn bwdsearch(&self,_i: u64, mut _d: i64) -> u64 {
+        let _b = self.blksize;
+        let mut _k :u64 = self.division_round_up(_i,_b);
+        let mut diff = 0;
+        let kb =(_k-1)*_b+1;
+        println!("Suche in (Rest)-Block ({} ... {}) ",_i-1,kb);
+        if (_i-1)%_b !=0{
+            let mut j= _i-1;
+            while(kb <= j){
+                println!("Suche in (Rest)-Block ({} ... {}) durch Schritt 1: j = {}",_i-1,kb, j);
+                if self.parenthesis[j]{
+                    diff-=1;
                 }else{
-                    _d = _d - self.excess[_v2 as usize];
-                    return self.bw_step_2(_v/2, _d);
+                    diff+=1;
                 }
+                println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
+                if _d  == diff {
+                    println!("Excess gefunden: Gesuchter Index ist {}",j);
+                    return j;
+                }
+                j -=1;
+
+            }
+        }
+
+        _d = _d - diff;
+        //TODO Knoten der k-ten Block beschreibt
+        //println!("{} {}", self.excess.len()/ 2,_i/_b);
+        let node = (self.excess.len()/ 2 + ((_i-1)/_b)  as usize) as u64;
+        println!("Aufruf Schritt 2 auf rmmT-Block {}, gesucht excess: {}", node,_d);
+        return self.bw_step_2(node,_d);
+    }
+
+    fn bw_step_2(&self, mut block :u64, mut _d: i64) -> u64 {
+        if self.is_left_child(block) {
+            if(block/2 != 1){
+                println!("Aufruf Schritt 2,linkes Kind erkannt, gehe zu Elternknoten {}", block/2);
+            }else{
+                println!("Aufruf Schritt 2, Elternknoten ist Wurzel ({})", block/2);
+            }
+
+            return self.bw_step_2(block/2,_d);
+        }else {
+            if(block == 1){
+                println!("Fehler: Wurzel erreicht");
+            }else {
+                println!("Ist rechtes Kind");
+            }
+            let left_sibling :u64 = block -1;
+            let min :i64 = self.minimum[left_sibling as usize];
+            let max :i64 = self.maximum[left_sibling as usize];
+            println!("Min: {}, Max: {}, d: {}", min, max,_d);
+            if min >= _d && _d <= max{
+                println!("Aufruf Schritt 3 auf linkem Geschwister: Block {}", left_sibling);
+                return self.bw_step_3(left_sibling,_d);
+
+            }else{
+                println!("d ist jetzt {}", _d + self.excess[left_sibling as usize]);
+                _d = _d + self.excess[left_sibling as usize];
+                println!("Aufruf Schritt 2 auf Block {}", block/2);
+                return self.bw_step_2(&block/2, _d);
+            }
         }
     }
 
 
-    fn bw_step_3(&self,_v :u64,mut _d :i64) -> u64{
-        if self.is_leaf(_v){
-            let mut excess :u64 = 0;
+    fn bw_step_3(&self,block :u64,mut _d :i64) -> u64{
+        if self.is_leaf(block){
+            println!("Block {} ist ein Blatt", block);
             let _b = self.blksize;
-            let _k :u64 = self.division_round_up(_v,_b);
-            for j in _v-1.. (_k-1)*_b{
-                if self.excess[_v as usize] as i64 +_d  == self.excess[_v as usize] as i64{
-                    excess = j;
+            let mut diff = 0;
+            let index = (block -(self.excess.len()/2) as u64)* _b+1;
+            let mut j= index+_b-1;
+            while(index <=j){
+                println!("Suche in Block ({} ... {}) durch Schritt 3: j = {}",index+_b-1,index, j);
+                //println!("index = {}, block = {} , j = {}",index,block,j);
+                if self.parenthesis[j] {
+                    diff -= 1;
+                } else {
+                    diff += 1;
                 }
+                println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
+                if _d == diff {
+                    println!("Excess gefunden: Gesuchter Index ist {}",j);
+                    return j;
+                }
+                j-=1;
+
             }
-            return excess;
         }else {
-            let _v_l = 2 * _v;
-            let _v_r = 2 * _v + 1;
-            let min: i64 = self.minimum[_v_l as usize];
+            let _v_l = 2 * block;
+            let _v_r = 2 * block + 1;
+            let min: i64 = self.minimum[_v_r as usize];
             let max: i64 = self.maximum[_v_r as usize];
-            if min <= _d && _d <= max {
-                return self.bw_step_3( _v_l, _d);
+            println!("Min:  {}, Max: {}, d_:   {}", min, max, _d);
+
+            if min >= _d && _d <= max {
+                println!("Rufe Schritt 3 auf rechtem Kind {} auf", _v_r);
+                return self.bw_step_3( _v_r, _d);
             } else {
-                _d = _d - self.excess[_v_l as usize];
-                return self.bw_step_3(_v_r, _d);
+                println!("Rufe Schritt 3 auf linkem Kind {} auf, vr war {}", _v_l, _v_r);
+                println!("d ist jetzt {} = {} + {}", _d + self.excess[_v_r as usize],_d,self.excess[_v_r as usize]);
+                _d = _d + self.excess[_v_r as usize];
+                return self.bw_step_3( _v_l, _d);
             }
         }
+        panic!("No result for bwdsearch");
     }
 
     fn is_leaf(&self,_v :u64) -> bool{
@@ -376,18 +435,7 @@ impl RangeMinMaxTree {
         return self.excess.len() -1 == _v as usize;
     }
 
-    pub fn bwdsearch(&self,_i: u64,mut _d: i64) -> u64{
-        let _b = self.blksize;
-        let mut _k :u64 = self.division_round_up(_i,_b);
-        for j in _i.wrapping_sub(1).. (_k.wrapping_sub(1)).wrapping_mul(_b){
-            if self.excess[_i as usize] as i64 +_d  == self.excess[j as usize] as i64{
-                return j;
-            }
 
-        }
-        _d = _d - (self.excess[(_k*self.blksize) as usize] - self.excess[_i as usize]);
-        return self.bw_step_2(_k+1,_d);
-    }
 
     pub(crate) fn get_excess(&self) -> &Vec<i64> {&self.excess}
 
@@ -727,14 +775,15 @@ mod tests {
         let parenthesis_bigger: BitVec<u8> =bit_vec![true, true, true, true, false, true, false, false, false, true, true, false, true, false, false, true, true, true, false, true, false, false, true, false, true, true, false, true, false, false, false, false];
 
         let rmm: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis,2);
-        let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,4);
+        let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,8);
 
-        //assert_eq!(rmm.fwdsearch(3,0), 5);
-        //assert_eq!(rmm.fwdsearch(1,0), 7);
+        //assert_eq!(rmm.fwdsearch(4,1), 5);
+        //assert_eq!(rmm.bwdsearch(8,3), 5);
 
-        assert_eq!(rmm_bigger.fwdsearch(1,-1), 32);
+        //assert_eq!(rmm.bwdsearch(2,-1), 1);
 
+        assert_eq!(rmm_bigger.fwdsearch(11,1), 18);
+
+        //assert_eq!(rmm_bigger.bwdsearch(18,0), 6);
     }
-
-
 }
