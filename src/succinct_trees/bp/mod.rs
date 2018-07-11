@@ -327,7 +327,7 @@ impl RangeMinMaxTree {
         if (_i-1)%_b !=0{
             let mut j= _i-1;
             while(kb <= j){
-                println!("Suche in (Rest)-Block ({} ... {}) durch Schritt 1: j = {}",_i-1,kb, j);
+                println!("Suche in (Rest)-Block ({} ... {}) durch Schritt 1: j = {}",j,kb, j);
                 if self.parenthesis[j]{
                     diff-=1;
                 }else{
@@ -342,8 +342,14 @@ impl RangeMinMaxTree {
 
             }
         }
+        let mut k = 0;
+        if self.parenthesis[_i-1]{
+            k +=1;
+        }else{
+            k-=1;
+        }
 
-        _d = _d - diff;
+        _d = _d - diff +k;
         //TODO Knoten der k-ten Block beschreibt
         //println!("{} {}", self.excess.len()/ 2,_i/_b);
         let node = (self.excess.len()/ 2 + ((_i-1)/_b)  as usize) as u64;
@@ -370,8 +376,9 @@ impl RangeMinMaxTree {
             let min :i64 = self.minimum[left_sibling as usize];
             let max :i64 = self.maximum[left_sibling as usize];
             println!("Min: {}, Max: {}, d: {}", min, max,_d);
-            if min >= _d && _d <= max{
+            if min <= _d && _d <= max{
                 println!("Aufruf Schritt 3 auf linkem Geschwister: Block {}", left_sibling);
+                _d = _d + self.excess[left_sibling as usize];
                 return self.bw_step_3(left_sibling,_d);
 
             }else{
@@ -388,25 +395,27 @@ impl RangeMinMaxTree {
         if self.is_leaf(block){
             println!("Block {} ist ein Blatt", block);
             let _b = self.blksize;
-            let mut diff = 0;
+            let mut diff = 0;//self.excess[block as usize];
             let index = (block -(self.excess.len()/2) as u64)* _b+1;
-            let mut j= index+_b-1;
-            while(index <=j){
-                println!("Suche in Block ({} ... {}) durch Schritt 3: j = {}",index+_b-1,index, j);
+            let mut return_value = 0;
+            let mut j= index;
+            while(j<=index+_b-1){
+                println!("Suche in Block ({} ... {}) durch Schritt 3: j = {}",index,index+_b-1, j);
                 //println!("index = {}, block = {} , j = {}",index,block,j);
-                if self.parenthesis[j] {
-                    diff -= 1;
-                } else {
+                if self.parenthesis[j-1] {
                     diff += 1;
+                } else {
+                    diff -= 1;
                 }
                 println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
                 if _d == diff {
                     println!("Excess gefunden: Gesuchter Index ist {}",j);
-                    return j;
+                    return_value= j;
                 }
-                j-=1;
+                j+=1;
 
             }
+            return return_value;
         }else {
             let _v_l = 2 * block;
             let _v_r = 2 * block + 1;
@@ -414,13 +423,13 @@ impl RangeMinMaxTree {
             let max: i64 = self.maximum[_v_r as usize];
             println!("Min:  {}, Max: {}, d_:   {}", min, max, _d);
 
-            if min >= _d && _d <= max {
+            if min <= _d && _d <= max {
                 println!("Rufe Schritt 3 auf rechtem Kind {} auf", _v_r);
                 return self.bw_step_3( _v_r, _d);
             } else {
                 println!("Rufe Schritt 3 auf linkem Kind {} auf, vr war {}", _v_l, _v_r);
-                println!("d ist jetzt {} = {} + {}", _d + self.excess[_v_r as usize],_d,self.excess[_v_r as usize]);
-                _d = _d + self.excess[_v_r as usize];
+                println!("d ist jetzt d = {} + {}", _d,self.excess[_v_l as usize]);
+                //_d = _d + self.excess[_v_l as usize];
                 return self.bw_step_3( _v_l, _d);
             }
         }
@@ -777,13 +786,19 @@ mod tests {
         let rmm: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis,2);
         let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,8);
 
-        //assert_eq!(rmm.fwdsearch(4,1), 5);
+        //assert_eq!(rmm.fwdsearch(5,-3), 8);
         //assert_eq!(rmm.bwdsearch(8,3), 5);
 
         //assert_eq!(rmm.bwdsearch(2,-1), 1);
 
-        assert_eq!(rmm_bigger.fwdsearch(11,1), 18);
 
+        //assert_eq!(rmm_bigger.fwdsearch(11,1), 18);
+
+        //assert_eq!(rmm_bigger.fwdsearch(6,0), 18);
         //assert_eq!(rmm_bigger.bwdsearch(18,0), 6);
+
+
+        assert_eq!(rmm_bigger.bwdsearch(18,-2), 16);
+
     }
 }
