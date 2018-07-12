@@ -76,7 +76,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn ancestor(&self,_lf:u64, _lf2:u64) -> bool{
-        unimplemented!();
+        _lf <= _lf2 && _lf2 < self.range_min_max_tree.fwdsearch( _lf, -1)
     }
     fn child(&self,_lf:u64, _lf2:u64) -> Option<u64>{
         unimplemented!();
