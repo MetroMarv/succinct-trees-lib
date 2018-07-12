@@ -67,7 +67,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn enclose(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.range_min_max_tree.bwdsearch(_lf, -2) + 1
     }
     fn subtree_size(&self,_lf:u64) -> u64{
         (self.range_min_max_tree.fwdsearch(_lf, -1) - _lf + 1)/2
@@ -76,7 +76,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn ancestor(&self,_lf:u64, _lf2:u64) -> bool{
-        unimplemented!();
+        _lf <= _lf2 && _lf2 < self.range_min_max_tree.fwdsearch( _lf, -1)
     }
     fn child(&self,_lf:u64, _lf2:u64) -> Option<u64>{
         unimplemented!();
@@ -136,30 +136,31 @@ impl RangeMinMaxTree {
             let mut qty = 0;
             let mut is_first = true;
 
-            for j in 0..parenthesis.len() {
-
-                if parenthesis.get_bit(j) {
-                    exc += 1;
-                } else {
-                    exc -= 1;
-                }
-
-
-                if !is_first {
-                    if exc > max {
-                        max = exc;
+            for j in 0..2_i32.pow(next_power) {
+                if  (j as u64) < parenthesis.len() {
+                    if parenthesis.get_bit(j as u64) {
+                        exc += 1;
+                    } else {
+                        exc -= 1;
                     }
-                    if exc < min {
+
+
+                    if !is_first {
+                        if exc > max {
+                            max = exc;
+                        }
+                        if exc < min {
+                            min = exc;
+                            qty = 1;
+                        } else if exc == min {
+                            qty += 1;
+                        }
+                    } else {
                         min = exc;
                         qty = 1;
-                    } else if exc == min {
-                        qty += 1;
+                        max = exc;
+                        is_first = false;
                     }
-                } else {
-                    min = exc;
-                    qty = 1;
-                    max = exc;
-                    is_first = false;
                 }
 
                 if block_count < (block_size*(2 as u64).pow(row - 1)) as u32{
@@ -169,7 +170,7 @@ impl RangeMinMaxTree {
                 } else {
 
 
-                    //println!("Excess wird eingetragen{}", exc);
+                    println!("Excess wird eingetragen{}", exc);
 
                     excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
                     minimum[(len/(2_usize.pow(row)) + vec_count)] = min;
@@ -722,11 +723,11 @@ mod tests {
         assert_eq!(*range_min_max_tree.get_excess(), vec_exc);
 
         //test minimum
-        let vec_min = vec![0, 0, 1, -2, 1, -1, -2, 0, 1, 0, 0, 0, 0, -2, 0, 0];
+        let vec_min = vec![0, 0, 1, -2, 1, -1, -2, 0, 1, 0, 0, -1, -1, -2, 0, 0];
         assert_eq!(*range_min_max_tree.get_minimum(), vec_min);
 
         //test maximum
-        let vec_max = vec![0, 3, 3, 0, 3, 1, 0, 0, 2, 1, 1, 1, 1, -1, 0, 0];
+        let vec_max = vec![0, 3, 3, 0, 3, 1, 0, 0, 2, 1, 1, 0, 0, -1, 0, 0];
         assert_eq!(*range_min_max_tree.get_maximum(), vec_max);
 
         //test quantity
