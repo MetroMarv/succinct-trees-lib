@@ -1,15 +1,17 @@
 use bv::{BitVec, Bits};
 use std::fmt;
 use super::SuccinctTreeFunctions;
+use bio::data_structures::rank_select::RankSelect;
 use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 mod rmm;
 use self::rmm::{RangeMinMaxTree};
 
-#[derive(Debug)]
+
 pub struct BalancedParenthesis {
     blocksize: u64,
-    range_min_max_tree: RangeMinMaxTree
+    range_min_max_tree: RangeMinMaxTree,
+    rank_select: RankSelect
 }
 
 impl SuccinctTreeFunctions for BalancedParenthesis{
@@ -44,16 +46,16 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         self.range_min_max_tree.bwdsearch(_lf, -2) + 1
     }
     fn rank(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.rank_select.rank_1(_lf).unwrap()
     }
     fn select(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.rank_select.select_1(_lf).unwrap()
     }
     fn close_rank(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.rank_select.rank_0(_lf).unwrap()
     }
     fn close_select(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.rank_select.select_0(_lf).unwrap()
     }
     fn enclose(&self,_lf:u64) -> u64{
         self.range_min_max_tree.bwdsearch(_lf, -2) + 1
@@ -95,8 +97,10 @@ impl BalancedParenthesis {
     }
 
     pub fn new(parenthesis: BitVec<u8>, blocksize: u64) -> BalancedParenthesis {
+        let rank_select = RankSelect::new(parenthesis.clone(), blocksize.clone() as usize);
         let range_min_max_tree = RangeMinMaxTree::new(parenthesis, blocksize);
-        BalancedParenthesis{ blocksize ,range_min_max_tree}
+
+        BalancedParenthesis{ blocksize ,range_min_max_tree, rank_select}
     }
 
     pub fn get_parenthesis(&self) -> &BitVec<u8>{
@@ -216,6 +220,41 @@ mod tests {
         let tree = example_tree();
         let expected = tree.get_parenthesis();
         assert_eq!(result.get_parenthesis(), expected);
+    }
+
+    #[test]
+    fn test_rank() {
+        let tree = example_tree();
+
+        assert_eq!(tree.rank(4), 4);
+        assert_eq!(tree.rank(5), 4);
+    }
+
+    #[test]
+    fn test_rank_close() {
+        let tree = example_tree();
+
+        assert_eq!(tree.close_rank(4), 1);
+        assert_eq!(tree.close_rank(5), 2);
+        assert_eq!(tree.close_rank(7), 4);
+    }
+
+    #[test]
+    fn test_select() {
+        let tree = example_tree();
+
+        assert_eq!(tree.select(3), 2);
+        assert_eq!(tree.select(1), 0);
+        assert_eq!(tree.select(4), 4);
+    }
+
+    #[test]
+    fn test_close_select() {
+        let tree = example_tree();
+
+        assert_eq!(tree.close_select(1), 3);
+        assert_eq!(tree.close_select(4), 7);
+        assert_eq!(tree.close_select(2), 5);
     }
 
     #[test]
