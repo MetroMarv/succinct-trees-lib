@@ -1,5 +1,6 @@
 use bv::{BitVec, Bits};
 
+#[derive(Debug)]
 pub struct RangeMinMaxTree {
     pub parenthesis: BitVec<u8>,
     excess: Vec<i64>,

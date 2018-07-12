@@ -1,10 +1,12 @@
 use bv::{BitVec, Bits};
 use std::fmt;
 use super::SuccinctTreeFunctions;
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 mod rmm;
 use self::rmm::{RangeMinMaxTree};
 
+#[derive(Debug)]
 pub struct BalancedParenthesis {
     blocksize: u64,
     range_min_max_tree: RangeMinMaxTree
@@ -131,10 +133,33 @@ impl fmt::Display for BalancedParenthesis {
     }
 }
 
+impl Serialize for BalancedParenthesis {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        self.get_parenthesis().serialize(serializer)
+    }
+}
+
+impl<'de> Deserialize<'de> for BalancedParenthesis {
+    fn deserialize<D>(deserializer: D) -> Result<BalancedParenthesis, D::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        let parenthesis = BitVec::deserialize(deserializer)?;
+
+        let length_f = parenthesis.len() as f64;
+        let blocksize = (length_f.log2().powi(2) / 32.0).ceil() as usize;
+
+        Ok(BalancedParenthesis::new(parenthesis, blocksize as u64))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bincode::{serialize, deserialize, Result };
+    use bincode::{serialize, deserialize };
     use bv::Bits;
     use succinct_trees::SuccinctTreeFunctions;
 
@@ -171,16 +196,27 @@ mod tests {
         assert_eq!(tree.get_parenthesis().get_bit(3), false);
     }
 
-    /*#[test]
+    #[test]
     fn test_serialization () {
         let tree = example_tree();
 
         let serialized = serialize(&tree).unwrap();
+        print!("SERIALIZED: {:?}", serialized);
 
-        let deserialized: Result<BalancedParenthesis> = deserialize(&serialized[..]);
+        let expected: Vec<u8> = vec![2, 0, 0, 0, 0, 0, 0, 0, 23, 0, 8, 0, 0, 0, 0, 0, 0, 0];
+        assert_eq!(serialized, expected);
+    }
 
-        assert_eq!(deserialized.unwrap().get_parenthesis().get_bit(3), false)
-    }*/
+    #[test]
+    fn test_deserialization () {
+        let serialized = [2, 0, 0, 0, 0, 0, 0, 0, 23, 0, 8, 0, 0, 0, 0, 0, 0, 0];
+
+        let result: BalancedParenthesis = deserialize(&serialized).unwrap();
+
+        let tree = example_tree();
+        let expected = tree.get_parenthesis();
+        assert_eq!(result.get_parenthesis(), expected);
+    }
 
     #[test]
     fn test_is_leaf() {

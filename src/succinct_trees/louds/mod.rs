@@ -2,26 +2,28 @@ use bv::{BitVec, Bits};
 use std::fmt;
 use super::SuccinctTreeFunctions;
 use bio::data_structures::rank_select::RankSelect;
+use serde::{Serialize, Serializer, Deserialize, Deserializer};
 
 pub struct Louds {
-    parenthesis: BitVec<u8>,
-    /* For fields added in future please add
-     * #[serde(skip_deserializing,skip_serializing)]
-     * annotation. So it's not (de)serialized.
-     */
     rank_select: RankSelect
 }
 
 impl Louds {
     pub fn new(parenthesis: BitVec<u8>) -> Louds {
-        // TODO: calculate block size floor(log(n)^2/32)
-        let rank_select = RankSelect::new(parenthesis.clone(), 4);
+        let length_f = parenthesis.len() as f64;
+        let blocksize = (length_f.log2().powi(2) / 32.0).ceil() as usize;
 
-        Louds{parenthesis, rank_select}
+        Louds::new_blocksize(parenthesis, blocksize)
+    }
+
+    pub fn new_blocksize (parenthesis: BitVec<u8>, blocksize: usize) -> Louds {
+        let rank_select = RankSelect::new(parenthesis.clone(), blocksize);
+
+        Louds{rank_select}
     }
 
     pub fn get_parenthesis(&self) -> &BitVec<u8> {
-        &self.parenthesis
+        &self.rank_select.bits()
     }
 
     fn prev_0 (&self, index: u64) -> u64 {
@@ -45,28 +47,38 @@ impl Louds {
         self.rank_select.select_0(rank).expect(&message)
     }
 
-    fn child_count (&self, node: u64) -> u64 {
+    fn get_representing_true(&self, node: u64) -> u64 {
+        assert!(node > 0);
         assert!(self.has_index(node));
 
-        let rank0_until_node = self.rank_select.rank_0(node-1).unwrap();
-        let rank1_until_node = self.rank_select.rank_1(node -1).unwrap();
+        let rank = self.rank_select.rank_0(node - 1).unwrap();
+        println!("Rank: {}", rank);
+        self.rank_select.select_1(rank +1).unwrap()
+    }
 
-        let index_node_over = self.rank_select.select_0(rank0_until_node +1).unwrap();
-        let rank1_after_node = self.rank_select.rank_1(index_node_over).unwrap();
+    fn has_next_sibling(&self, node: u64 ) -> bool {
+        assert!(node > 0);
+        assert!(self.has_index(node));
 
-        rank1_after_node - rank1_until_node
+        if node == 1 {
+            return false;
+        }
+
+        let rep_true_index = self.get_representing_true(node);
+
+        self.rank_select.bits().get_bit(rep_true_index + 1)
     }
 }
 
 impl SuccinctTreeFunctions for Louds{
     fn has_index(&self, index:u64) -> bool {
-        index < self.parenthesis.len()
+        index < self.get_parenthesis().len()
     }
 
     fn is_leaf(&self, node:u64) -> bool{
         assert!(self.has_index(node));
 
-        self.parenthesis.get_bit(node) == false
+        self.get_parenthesis().get_bit(node) == false
     }
 
     fn first_child(&self, node:u64) -> Option<u64>{
@@ -76,9 +88,14 @@ impl SuccinctTreeFunctions for Louds{
     fn next_sibling(&self, node:u64) -> Option<u64>{
         assert!(self.has_index(node));
 
+        if !self.has_next_sibling(node) {
+            return None;
+        }
+
         let y = self.rank_select.rank_0(node -1).unwrap() + 1;
 
-        let inner = self.rank_select.select_1(y).unwrap() + 1;
+        let inner = self.rank_select.rank_1(self.rank_select.select_1(y).unwrap()).unwrap() + 1;
+
         let message = format!("Couldn't determine select_0 from index {}", inner);
         Some(self.rank_select.select_0(inner).expect(&message))
     }
@@ -128,7 +145,7 @@ impl SuccinctTreeFunctions for Louds{
     fn child(&self, node:u64, index:u64) -> Option<u64>{
         assert!(self.has_index(node));
 
-        if self.child_count(node) < index +1  {
+        if self.degree(node) < index +1  {
             return None;
         }
 
@@ -152,6 +169,10 @@ impl SuccinctTreeFunctions for Louds{
     fn degree(&self, node:u64) -> u64{
         assert!(self.has_index(node));
 
+        if !self.get_parenthesis()[node] {
+            return 0;
+        }
+
         self.next_0(node) - node
     }
 
@@ -163,8 +184,8 @@ impl SuccinctTreeFunctions for Louds{
 impl fmt::Display for Louds {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let mut parenthesis_expression = String::from("");
-        for i in 0..self.parenthesis.len()-1 {
-            let bit = self.parenthesis.get_bit(i);
+        for i in 0..self.get_parenthesis().len()-1 {
+            let bit = self.get_parenthesis().get_bit(i);
 
             if bit {
                 parenthesis_expression.push_str("(");
@@ -176,204 +197,25 @@ impl fmt::Display for Louds {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use bincode::{serialize, deserialize, Result };
-    use bv::Bits;
-    use succinct_trees::SuccinctTreeFunctions;
-
-
-    pub fn example_tree() -> Louds{
-        let parenthesis: BitVec<u8> = bit_vec![true, true, false, true, true, false, false, false];
-        return Louds::new(parenthesis);
+impl Serialize for Louds {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        self.get_parenthesis().serialize(serializer)
     }
-
-    pub fn empty_tree() -> Louds{
-        let parenthesis: BitVec<u8> = bit_vec![];
-        return Louds::new(parenthesis);
-    }
-
-    #[test]
-    fn test_constructor() {
-        let tree = example_tree();
-
-        assert_eq!(tree.get_parenthesis().get_bit(3), false);
-    }
-
-//    #[test]
-//    fn test_serialization () {
-//        let parenthesis: BitVec<u8>= bit_vec![true, true, true, false, true, false, false, false];
-//        let tree = Louds::new(parenthesis);
-//
-//        let serialized = serialize(&tree).unwrap();
-//
-//        let deserialized: Result<Louds> = deserialize(&serialized[..]).unwrap();
-//
-//        assert_eq!(deserialized.get_parenthesis().get_bit(3), false)
-//    }
-
-    #[test]
-    fn test_child_count () {
-        assert_eq!(example_tree().child_count(1), 1);
-        assert_eq!(example_tree().child_count(3), 2);
-        assert_eq!(example_tree().child_count(6), 0);
-    }
-
-    #[test]
-    fn test_is_leaf(){
-        assert_eq!(example_tree().is_leaf(0), false);
-        assert_eq!(example_tree().is_leaf(6), true);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_is_leaf_empty() {
-        empty_tree().is_leaf(0);
-    }
-
-
-    #[test]
-    #[should_panic]
-    fn test_first_child_empty(){
-        empty_tree().first_child(0);
-    }
-
-    #[test]
-    fn test_first_child(){
-        assert_eq!(example_tree().first_child(1),Some(3));
-    }
-
-
-    #[test]
-    fn test_next_sibling(){
-        assert_eq!(example_tree().next_sibling(6).unwrap(), 7);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_next_sibling_empty(){
-        empty_tree().next_sibling(6);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_parent_empty(){
-        empty_tree().parent(0);
-    }
-
-    #[test]
-    fn test_parent(){
-        assert_eq!(example_tree().parent(4), 1);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_parent_root () {
-        example_tree().parent(0);
-    }
-
-    #[test]
-    fn test_subtree_size(){
-        assert_eq!(example_tree().subtree_size(0), 2)
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_subtree_size_empty(){
-        empty_tree().subtree_size(0);
-    }
-
-    #[test]
-    fn test_ancestor(){
-        assert_eq!(example_tree().ancestor(6,7),true);
-        assert_eq!(example_tree().ancestor(3,7),false);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_ancestor_empty(){
-        empty_tree().ancestor(0,1);
-    }
-
-    #[test]
-    fn test_level_ancestor(){
-        assert_eq!(example_tree().level_ancestor(6,2), 0);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_level_ancestor_empty(){
-        empty_tree().level_ancestor(0,1);
-    }
-
-    #[test]
-    fn test_lca(){
-        assert_eq!(example_tree().lca(6,7),3);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_lca_empty(){
-        empty_tree().lca(0,1);
-    }
-
-    #[test]
-    fn test_child() {
-        assert_eq!(example_tree().child(3, 1),Some(7));
-    }
-
-    #[test]
-    fn test_child_root () {
-        let parenthesis: BitVec<u8> = bit_vec![true, true, true, false, true, true, false, false, false, false];
-        let tree = Louds::new(parenthesis);
-
-        assert_eq!(tree.child(1, 0), Some(4));
-        assert_eq!(tree.child(1, 1), Some(7));
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_child_empty(){
-        empty_tree().child(0,1);
-    }
-
-    #[test]
-    fn test_child_non_existing (){
-        assert_eq!(example_tree().child(1, 2), None);
-    }
-
-    #[test]
-    fn test_depth(){
-        assert_eq!(example_tree().depth(0),2);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_depth_empty(){
-        empty_tree().depth(0);
-    }
-
-    #[test]
-    fn test_degree(){
-        assert_eq!(example_tree().degree(3),2);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_degree_empty(){
-        empty_tree().degree(0);
-    }
-
-    #[test]
-    fn test_enclose(){
-        assert_eq!(example_tree().enclose(0),1);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_enclose_empty(){
-        empty_tree().enclose(0);
-    }
-
 }
+
+impl<'de> Deserialize<'de> for Louds {
+    fn deserialize<D>(deserializer: D) -> Result<Louds, D::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        let parenthesis = BitVec::deserialize(deserializer)?;
+
+        Ok(Louds::new(parenthesis))
+    }
+}
+
+#[cfg(test)]
+mod tests;
