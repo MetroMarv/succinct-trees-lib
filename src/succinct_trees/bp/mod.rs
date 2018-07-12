@@ -114,7 +114,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     }
 
     fn parent(&self,_lf:u64) -> u64{
-        self.range_min_max_tree.bwdsearch(_lf, -2) + 1
+        self.enclose(_lf)
     }
     fn rank(&self,_lf:u64) -> u64{
         self.rank_select.rank_1(_lf).unwrap()
@@ -296,7 +296,7 @@ mod tests {
     }
 
     #[test]
-    fn test_parent(){
+    fn test_parent_root(){
         assert_eq!(example_tree().parent(1), 0)
     }
 
@@ -339,28 +339,6 @@ mod tests {
     }
 
     #[test]
-    fn test_lca(){
-        assert_eq!(example_tree().lca(2,4),0);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_lca_empty(){
-        empty_tree().lca(2,4);
-    }
-
-    #[test]
-    fn test_child(){
-        assert_eq!(example_tree().child(0, 0),Some(1));
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_child_empty(){
-        empty_tree().child(0,1);
-    }
-
-    #[test]
     fn test_depth(){
         assert_eq!(example_tree().depth(0),1);
         assert_eq!(example_tree().depth(2),3);
@@ -373,20 +351,9 @@ mod tests {
     }
 
     #[test]
-    fn test_degree(){
-        assert_eq!(example_tree().degree(0),0);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_degree_empty(){
-        empty_tree().degree(0);
-    }
-
-    #[test]
     fn test_enclose(){
-        // TODO: (MR) Expects u64 instead of bool. Put 0 as expected result now but is this correct?
-        assert_eq!(example_tree().enclose(0),0);
+        assert_eq!(example_tree().enclose(2),1);
+        assert_eq!(example_tree().enclose(4),1);
     }
 
     #[test]
