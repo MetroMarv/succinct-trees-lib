@@ -67,7 +67,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         unimplemented!();
     }
     fn enclose(&self,_lf:u64) -> u64{
-        unimplemented!();
+        self.range_min_max_tree.bwdsearch(_lf, -2) + 1
     }
     fn subtree_size(&self,_lf:u64) -> u64{
         (self.range_min_max_tree.fwdsearch(_lf, -1) - _lf + 1)/2
