@@ -14,6 +14,80 @@ pub struct BalancedParenthesis {
     rank_select: RankSelect
 }
 
+
+impl fmt::Display for BalancedParenthesis {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut parenthesis_expression = String::from("");
+        for i in 0..self.range_min_max_tree.parenthesis.len()-1 {
+            let bit = self.range_min_max_tree.parenthesis.get_bit(i);
+
+            if bit {
+                parenthesis_expression.push_str("(");
+            } else {
+                parenthesis_expression.push_str(")");
+            }
+        }
+        write!(f, "BP-Tree: {}", parenthesis_expression)
+    }
+}
+
+
+impl Serialize for BalancedParenthesis {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+        where
+            S: Serializer,
+    {
+        self.get_parenthesis().serialize(serializer)
+    }
+}
+
+
+impl<'de> Deserialize<'de> for BalancedParenthesis {
+    fn deserialize<D>(deserializer: D) -> Result<BalancedParenthesis, D::Error>
+        where
+            D: Deserializer<'de>,
+    {
+        let parenthesis = BitVec::deserialize(deserializer)?;
+
+        let length_f = parenthesis.len() as f64;
+        let blocksize = (length_f.log2().powi(2) / 32.0).ceil() as usize;
+
+        Ok(BalancedParenthesis::new(parenthesis, blocksize as u64))
+    }
+}
+
+
+impl BalancedParenthesis {
+    pub fn new_with_fixed_blocksize(parenthesis: BitVec<u8>) -> BalancedParenthesis {
+        let bp = BalancedParenthesis::new(parenthesis, 2);
+        bp
+    }
+
+    pub fn new(parenthesis: BitVec<u8>, blocksize: u64) -> BalancedParenthesis {
+        let rank_select = RankSelect::new(parenthesis.clone(), blocksize.clone() as usize);
+        let range_min_max_tree = RangeMinMaxTree::new(parenthesis, blocksize);
+
+        BalancedParenthesis{ blocksize ,range_min_max_tree, rank_select}
+    }
+
+    pub fn get_parenthesis(&self) -> &BitVec<u8>{
+        &self.range_min_max_tree.parenthesis
+    }
+
+    pub(crate) fn excess(&self, position: u64) -> u64 {
+        let rank_1 = self.rank_select.rank_1(position).unwrap();
+        let rank_0 = self.rank_select.rank_0(position).unwrap();
+
+        rank_1 - rank_0
+    }
+
+    fn find_close(&self, node: u64) -> u64 {
+        // RMM tree is 1 base so -1 :)
+        self.range_min_max_tree.fwdsearch(node +1, -1) -1
+    }
+}
+
+
 impl SuccinctTreeFunctions for BalancedParenthesis{
     fn has_index(&self, index:u64) -> bool {
       index < self.range_min_max_tree.parenthesis.len()
@@ -34,12 +108,9 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
         return None;
     }
 
-    fn next_sibling(&self,_lf:u64) -> Option<u64>{
-        let s = self.range_min_max_tree.fwdsearch(_lf, -1) + 1;
-        if self.range_min_max_tree.parenthesis.get_bit(s) == true {
-            return Some(s);
-        }
-        return None;
+    fn next_sibling(&self,node:u64) -> Option<u64>{
+        // TODO: check if has sibling!!
+        Some(self.find_close(node) +1)
     }
 
     fn parent(&self,_lf:u64) -> u64{
@@ -60,14 +131,11 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn enclose(&self,_lf:u64) -> u64{
         self.range_min_max_tree.bwdsearch(_lf, -2) + 1
     }
-    fn subtree_size(&self,_lf:u64) -> u64{
-        (self.range_min_max_tree.fwdsearch(_lf, -1) - _lf + 1)/2
-    }
-    fn pre_rank(&self,_lf:u64) -> u64{
-        unimplemented!();
+    fn subtree_size(&self,node:u64) -> u64{
+        ((self.find_close(node)- node + 1) / 2) -1
     }
     fn ancestor(&self,_lf:u64, _lf2:u64) -> bool{
-        _lf <= _lf2 && _lf2 < self.range_min_max_tree.fwdsearch( _lf, -1)
+        _lf <= _lf2 && _lf2 < self.find_close(_lf)
     }
     fn child(&self,_lf:u64, _lf2:u64) -> Option<u64>{
         unimplemented!();
@@ -85,80 +153,8 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn depth(&self,_lf:u64) -> u64{
         self.excess(_lf) as u64
     }
-
-
-
 }
 
-impl BalancedParenthesis {
-    pub fn new_with_fixed_blocksize(parenthesis: BitVec<u8>) -> BalancedParenthesis {
-        let bp = BalancedParenthesis::new(parenthesis, 2);
-        bp
-    }
-
-    pub fn new(parenthesis: BitVec<u8>, blocksize: u64) -> BalancedParenthesis {
-        let rank_select = RankSelect::new(parenthesis.clone(), blocksize.clone() as usize);
-        let range_min_max_tree = RangeMinMaxTree::new(parenthesis, blocksize);
-
-        BalancedParenthesis{ blocksize ,range_min_max_tree, rank_select}
-    }
-
-    pub fn get_parenthesis(&self) -> &BitVec<u8>{
-        &self.range_min_max_tree.parenthesis
-    }
-
-    pub(crate) fn excess(&self, position: u64) -> u64 {
-        let mut count = 0;
-        for i in 0..position {
-            if self.range_min_max_tree.parenthesis.get_bit(i) {
-                count += 1;
-            } else {
-                count -= 1;
-            }
-        }
-        count
-    }
-
-}
-
-impl fmt::Display for BalancedParenthesis {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let mut parenthesis_expression = String::from("");
-        for i in 0..self.range_min_max_tree.parenthesis.len()-1 {
-            let bit = self.range_min_max_tree.parenthesis.get_bit(i);
-
-            if bit {
-                parenthesis_expression.push_str("(");
-            } else {
-                parenthesis_expression.push_str(")");
-            }
-        }
-        write!(f, "BP-Tree: {}", parenthesis_expression)
-    }
-}
-
-impl Serialize for BalancedParenthesis {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: Serializer,
-    {
-        self.get_parenthesis().serialize(serializer)
-    }
-}
-
-impl<'de> Deserialize<'de> for BalancedParenthesis {
-    fn deserialize<D>(deserializer: D) -> Result<BalancedParenthesis, D::Error>
-        where
-            D: Deserializer<'de>,
-    {
-        let parenthesis = BitVec::deserialize(deserializer)?;
-
-        let length_f = parenthesis.len() as f64;
-        let blocksize = (length_f.log2().powi(2) / 32.0).ceil() as usize;
-
-        Ok(BalancedParenthesis::new(parenthesis, blocksize as u64))
-    }
-}
 
 #[cfg(test)]
 mod tests {
@@ -306,7 +302,9 @@ mod tests {
 
     #[test]
     fn test_subtree_size(){
-        assert_eq!(example_tree().subtree_size(1), 2)
+        assert_eq!(example_tree().subtree_size(1), 2);
+        assert_eq!(example_tree().subtree_size(0), 3);
+        assert_eq!(example_tree().subtree_size(4), 0);
     }
 
     #[test]
@@ -317,7 +315,10 @@ mod tests {
 
     #[test]
     fn test_ancestor(){
-        assert_eq!(example_tree().ancestor(0,1),false);
+        let tree = example_tree();
+
+        assert_eq!(tree.ancestor(0, 1), true);
+        assert_eq!(tree.ancestor(2, 4), false);
     }
 
     #[test]
@@ -361,7 +362,8 @@ mod tests {
 
     #[test]
     fn test_depth(){
-        assert_eq!(example_tree().depth(0),0);
+        assert_eq!(example_tree().depth(0),1);
+        assert_eq!(example_tree().depth(2),3);
     }
 
     #[test]

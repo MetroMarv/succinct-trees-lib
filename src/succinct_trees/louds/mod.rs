@@ -134,10 +134,6 @@ impl SuccinctTreeFunctions for Louds{
         unimplemented!();
     }
 
-    fn pre_rank(&self,_lf:u64) -> u64{
-        unimplemented!();
-    }
-
     fn ancestor(&self,_lf:u64, _lf2:u64) -> bool{
         unimplemented!();
     }

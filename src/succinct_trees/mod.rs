@@ -13,7 +13,6 @@ pub trait SuccinctTreeFunctions{
     fn close_select(&self,_: u64) -> u64;
     fn enclose(&self,_: u64) -> u64;
     fn subtree_size(&self,_: u64) -> u64;
-    fn pre_rank(&self,_: u64) -> u64;
     fn ancestor(&self,_: u64, _: u64) -> bool;
     fn child(&self,_: u64,_: u64) -> Option<u64>;
     fn lca (&self,_: u64, _: u64) -> u64;
