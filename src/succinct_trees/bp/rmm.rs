@@ -80,7 +80,7 @@ impl RangeMinMaxTree {
                 } else {
 
 
-                    println!("Excess wird eingetragen{}", exc);
+                    //println!("Excess wird eingetragen{}", exc);
 
                     excess[(len/(2_usize.pow(row)) + vec_count)] =  exc;
                     minimum[(len/(2_usize.pow(row)) + vec_count)] = min;
@@ -125,8 +125,6 @@ impl RangeMinMaxTree {
         }
 
         _d = _d - diff;
-        //TODO Knoten der k-ten Block beschreibt
-        //println!("{} {}", self.excess.len()/ 2,_i/_b);
         let node = (self.excess.len()/ 2 + ((_i-1)/_b) as usize) as u64;
         println!("Aufruf Schritt 2 auf rmmT-Block {}", node);
         return self.fw_step_2(node,_d);
@@ -234,35 +232,35 @@ impl RangeMinMaxTree {
         let mut _k :u64 = self.division_round_up(_i,_b);
         let mut diff = 0;
         let kb =(_k-1)*_b+1;
-        println!("Suche in (Rest)-Block ({} ... {}) ",_i-1,kb);
+        println!("Suche in (Rest)-Block ({} ... {}) ",_i,kb);
         if (_i-1)%_b !=0{
-            let mut j= _i-1;
+            let mut j= _i;
             while(kb <= j){
                 println!("Suche in (Rest)-Block ({} ... {}) durch Schritt 1: j = {}",j,kb, j);
-                if self.parenthesis[j]{
+                if self.parenthesis[j-1]{
                     diff-=1;
                 }else{
                     diff+=1;
                 }
                 println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
                 if _d  == diff {
-                    println!("Excess gefunden: Gesuchter Index ist {}",j);
-                    return j;
+                    println!("Excess gefunden: Gesuchter Index ist {}",j-1);
+                    return j-1;
                 }
                 j -=1;
 
             }
         }
 
-        let mut k = 0;
+        /*let mut k = 0;
 
         if self.parenthesis[_i-1]{
             k +=1;
         }else{
             k-=1;
-        }
+        }*/
 
-        _d = _d+k-diff;
+        _d = _d-diff;
         //TODO Knoten der k-ten Block beschreibt
         //println!("{} {}", self.excess.len()/ 2,_i/_b);
         let node = (self.excess.len()/ 2 + ((_i-1)/_b)  as usize) as u64;
@@ -289,9 +287,9 @@ impl RangeMinMaxTree {
             let min :i64 = self.minimum[left_sibling as usize];
             let max :i64 = self.maximum[left_sibling as usize];
             println!("Min: {}, Max: {}, d: {}", min, max,_d);
-            if min <= _d && _d <= max{
+            if min <= -_d || -_d <= max{
                 println!("Aufruf Schritt 3 auf linkem Geschwister: Block {}", left_sibling);
-                _d = _d - self.excess[left_sibling as usize];
+                //_d = _d + self.excess[left_sibling as usize];
                 return self.bw_step_3(left_sibling,_d);
 
             }else{
@@ -315,14 +313,14 @@ impl RangeMinMaxTree {
                 println!("Suche in Block ({} ... {}) durch Schritt 3: j = {}",index+_b-1,index, j);
                 //println!("index = {}, block = {} , j = {}",index,block,j);
                 if self.parenthesis[j-1] {
-                    diff += 1;
-                } else {
                     diff -= 1;
+                } else {
+                    diff += 1;
                 }
                 println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
                 if _d == diff {
-                    println!("Excess gefunden: Gesuchter Index ist {}",j);
-                    return j;
+                    println!("Excess gefunden: Gesuchter Index ist {}",j-1);
+                    return j-1;
                 }
                 j-=1;
 
@@ -456,10 +454,11 @@ mod tests {
     #[test]
     fn test_bwdsearch_len32_blk8_2(){
         let parenthesis_bigger: BitVec<u8> =bit_vec![true, true, true, true, false, true, false, false, false, true, true, false, true, false, false, true, true, true, false, true, false, false, true, false, true, true, false, true, false, false, false, false];
-        let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,8);
+        let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,2);
 
 
-        assert_eq!(rmm_bigger.bwdsearch(18,-2), 16);
+        assert_eq!(rmm_bigger.bwdsearch(18,-3), 15);
+        //panic!("");
     }
 
     #[test]
@@ -468,6 +467,6 @@ mod tests {
         let rmm: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis,2);
 
 
-        assert_eq!(rmm.bwdsearch(8,2), 6);
+        assert_eq!(rmm.bwdsearch(8,3), 5);
     }
 }
