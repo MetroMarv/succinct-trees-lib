@@ -143,9 +143,20 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     fn lca(&self,_lf:u64, _lf2:u64) -> u64{
         unimplemented!();
     }
-    fn level_ancestor(&self,_lf:u64, _lf2:u64) -> u64{
-        self.range_min_max_tree.bwdsearch(_lf, -(_lf2 as i64) - 1) + 1
+    fn level_ancestor(&self,node:u64, d:u64) -> u64 {
+        /* This is slow version determining parent x times.
+           Faster would be to call bwdsearch(_lf -1, -(_lf2 -1)) */
+
+        //self.range_min_max_tree.bwdsearch(node +1 , -(d as i64)-1)
+        let mut result = node;
+
+        for i in 0..d {
+            result = self.parent(result);
+        }
+
+        result
     }
+
     fn degree(&self,_lf:u64) -> u64{
         unimplemented!();
     }
@@ -297,7 +308,13 @@ mod tests {
 
     #[test]
     fn test_parent_root(){
-        assert_eq!(example_tree().parent(1), 0)
+        assert_eq!(example_tree().parent(1), 0);
+    }
+
+    #[test]
+    fn test_parent(){
+        assert_eq!(example_tree().parent(2), 1);
+        assert_eq!(example_tree().parent(4), 1);
     }
 
     #[test]
@@ -329,7 +346,8 @@ mod tests {
 
     #[test]
     fn test_level_ancestor(){
-        assert_eq!(example_tree().level_ancestor(0,1), 0);
+        assert_eq!(example_tree().level_ancestor(4,1), 1);
+        assert_eq!(example_tree().level_ancestor(2,1), 1);
     }
 
     #[test]
