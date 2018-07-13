@@ -13,6 +13,9 @@ pub struct RangeMinMaxTree {
 impl RangeMinMaxTree {
 
     pub fn new(parenthesis: BitVec<u8>, block_size: u64) -> RangeMinMaxTree {
+        if parenthesis.len()%block_size != 0{
+            panic!(" block size not valid!");
+        }
         let blksize= block_size;
         let next_power = (parenthesis.len() as f64).log2().ceil() as u32;
         let len = ((2*(2_i32.pow(next_power)))/block_size as i32) as usize;
@@ -238,9 +241,9 @@ impl RangeMinMaxTree {
             while(kb <= j){
                 println!("Suche in (Rest)-Block ({} ... {}) durch Schritt 1: j = {}",j,kb, j);
                 if self.parenthesis[j-1]{
-                    diff-=1;
-                }else{
                     diff+=1;
+                }else{
+                    diff-=1;
                 }
                 println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
                 if _d  == diff {
@@ -260,7 +263,8 @@ impl RangeMinMaxTree {
             k-=1;
         }*/
 
-        _d = _d-diff;
+        _d = _d+diff;
+        println!("d ist jetzt d = {}", _d);
         //TODO Knoten der k-ten Block beschreibt
         //println!("{} {}", self.excess.len()/ 2,_i/_b);
         let node = (self.excess.len()/ 2 + ((_i-1)/_b)  as usize) as u64;
@@ -272,6 +276,7 @@ impl RangeMinMaxTree {
         if self.is_left_child(block) {
             if(block/2 != 1){
                 println!("Aufruf Schritt 2,linkes Kind erkannt, gehe zu Elternknoten {}", block/2);
+
             }else{
                 println!("Aufruf Schritt 2, Elternknoten ist Wurzel ({})", block/2);
             }
@@ -284,19 +289,26 @@ impl RangeMinMaxTree {
                 println!("Ist rechtes Kind");
             }
             let left_sibling :u64 = block -1;
+            _d = _d + self.excess[left_sibling as usize];
+            println!("d ist jetzt d = {}", _d);
             let min :i64 = self.minimum[left_sibling as usize];
             let max :i64 = self.maximum[left_sibling as usize];
+
+
             println!("Min: {}, Max: {}, d: {}", min, max,_d);
-            if min <= -_d || -_d <= max{
+
+            if min <= _d && _d <= max{
                 println!("Aufruf Schritt 3 auf linkem Geschwister: Block {}", left_sibling);
-                //_d = _d + self.excess[left_sibling as usize];
+                _d = _d -self.excess[left_sibling as usize];
+
                 return self.bw_step_3(left_sibling,_d);
 
             }else{
                 //println!("d ist jetzt {}", _d + self.excess[left_sibling as usize]);
-                //_d = _d + self.excess[left_sibling as usize];
+                _d = _d -self.excess[left_sibling as usize];
                 println!("Aufruf Schritt 2 auf Block {}", block/2);
                 return self.bw_step_2(&block/2, _d);
+
             }
         }
     }
@@ -308,39 +320,43 @@ impl RangeMinMaxTree {
             let _b = self.blksize;
             let mut diff = 0;//self.excess[block as usize];
             let index = (block -(self.excess.len()/2) as u64)* _b+1;
-            let mut j= index+_b-1;
-            while(index<=j){
-                println!("Suche in Block ({} ... {}) durch Schritt 3: j = {}",index+_b-1,index, j);
+            let mut j= index;
+            let mut return_value = 0;
+            while(j<=index+_b-1){
+                println!("Suche in Block ({} ... {}) durch Schritt 3: j = {}",index,index+_b-1, j);
                 //println!("index = {}, block = {} , j = {}",index,block,j);
                 if self.parenthesis[j-1] {
-                    diff -= 1;
-                } else {
                     diff += 1;
+                } else {
+                    diff -= 1;
                 }
                 println!("Unterschied gesucht: {}, gefunden: {}",_d,diff);
                 if _d == diff {
-                    println!("Excess gefunden: Gesuchter Index ist {}",j-1);
-                    return j-1;
+                    println!("Excess gefunden: Gesuchter Index ist {}",j);
+                    return_value= j;
                 }
-                j-=1;
+                j+=1;
 
             }
+            return return_value;
         }else {
             let _v_l = 2 * block;
             let _v_r = 2 * block + 1;
-            let min: i64 = self.minimum[_v_l as usize];
-            let max: i64 = self.maximum[_v_l as usize];
-            println!("Min:  {}, Max: {}, d_:   {}", min, max, _d);
+            let min: i64 = self.minimum[_v_r as usize];
+            let max: i64 = self.maximum[_v_r as usize];
+            println!("Min:  {}, Max: {} von rechtem Kind, d_:   {}", min, max, _d);
 
             if min <= _d && _d <= max {
-                println!("Rufe Schritt 3 auf linkem Kind {} auf", _v_l);
-                _d = _d + self.excess[_v_r as usize];
-                return self.bw_step_3( _v_l, _d);
-            } else {
-                println!("Rufe Schritt 3 auf rechtem Kind {} auf, vl war {}", _v_r, _v_l);
-                println!("d ist jetzt d = {} + {}", _d,self.excess[_v_l as usize]);
-                //_d = _d + self.excess[_v_l as usize];
+                println!("Rufe Schritt 3 auf rechtem Kind {} auf", _v_r);
+                //_d = _d - self.excess[_v_l as usize];
                 return self.bw_step_3( _v_r, _d);
+            } else {
+                println!("Rufe Schritt 3 auf linkem Kind {} auf, vr war {}", _v_l, _v_r);
+                println!("d ist jetzt d = {} - {}",_d,self.excess[_v_l as usize]);
+                _d = _d -self.excess[_v_l as usize];
+                println!("d ist jetzt d = {}",_d);
+
+                return self.bw_step_3( _v_l, _d);
             }
         }
         panic!("No result for bwdsearch");
@@ -449,10 +465,21 @@ mod tests {
 
 
         assert_eq!(rmm_bigger.bwdsearch(18,0), 6);
+        //panic!("");
 
     }
     #[test]
     fn test_bwdsearch_len32_blk8_2(){
+        let parenthesis_bigger: BitVec<u8> =bit_vec![true, true, true, true, false, true, false, false, false, true, true, false, true, false, false, true, true, true, false, true, false, false, true, false, true, true, false, true, false, false, false, false];
+        let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,8);
+
+
+        assert_eq!(rmm_bigger.bwdsearch(18,-3), 15);
+        //panic!("");
+    }
+
+    #[test]
+    fn test_bwdsearch_len32_blk2_2(){
         let parenthesis_bigger: BitVec<u8> =bit_vec![true, true, true, true, false, true, false, false, false, true, true, false, true, false, false, true, true, true, false, true, false, false, true, false, true, true, false, true, false, false, false, false];
         let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,2);
 
@@ -468,5 +495,17 @@ mod tests {
 
 
         assert_eq!(rmm.bwdsearch(8,3), 5);
+        //panic!("");
+    }
+
+    #[test]
+    fn test_bwdsearch_len32_blk2_1(){
+        let parenthesis_bigger: BitVec<u8> =bit_vec![true, true, true, true, false, true, false, false, false, true, true, false, true, false, false, true, true, true, false, true, false, false, true, false, true, true, false, true, false, false, false, false];
+        let rmm_bigger: RangeMinMaxTree = RangeMinMaxTree::new(parenthesis_bigger,2);
+
+
+        assert_eq!(rmm_bigger.bwdsearch(18,0), 6);
+        //panic!("");
+
     }
 }
