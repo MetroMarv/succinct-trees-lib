@@ -29,28 +29,30 @@ pub mod parser {
     use bv::{BitVec, Bits};
 
     pub struct TreeParser {
-        file: File
+        file: File,
+        content: String,
+        has_read: bool
     }
 
     impl TreeParser {
         pub fn new(file: File) -> TreeParser {
-            TreeParser {file}
+            TreeParser {file, content: String::new(), has_read: false}
         }
 
         fn read_file (&mut self) -> String {
             let mut content = String::new();
             let result = self.file.read_to_string(&mut content);
 
-            match result {
+            let content = match result {
                 Ok(_) => content,
                 Err(err) => panic!("Could not read string from file. {}", err)
-            }
+            };
+
+            content
         }
 
         fn read_file_as_bitvec (&mut self) -> BitVec<u8> {
-            let parenthesis = self.read_file();
-
-            println!("Parenthesis: {}", parenthesis);
+            let parenthesis = self.get_content();;
 
             let mut bitvec = BitVec::new();
 
@@ -68,6 +70,15 @@ pub mod parser {
             bitvec
         }
 
+        fn get_content(&mut self) -> &String {
+            if !self.has_read {
+                self.content = self.read_file();
+                self.has_read = true;
+            }
+
+            &self.content
+        }
+
         pub fn read_bp (&mut self) -> BalancedParenthesis {
             let bitvec = self.read_file_as_bitvec();
 
@@ -77,7 +88,7 @@ pub mod parser {
         pub fn read_louds (&mut self) -> Louds {
             let bitvec = self.read_file_as_bitvec();
 
-            Louds::new(bitvec)
+            Louds::new(bitvec.clone())
         }
 
         fn write_bit (&mut self, bit: bool) {

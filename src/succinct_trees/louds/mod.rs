@@ -17,7 +17,8 @@ impl Louds {
     }
 
     pub fn new_blocksize (parenthesis: BitVec<u8>, blocksize: usize) -> Louds {
-        let rank_select = RankSelect::new(parenthesis.clone(), blocksize);
+        println!("Len: {}", parenthesis.len());
+        let rank_select = RankSelect::new(parenthesis, blocksize);
 
         Louds{rank_select}
     }
