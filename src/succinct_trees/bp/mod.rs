@@ -114,6 +114,7 @@ impl SuccinctTreeFunctions for BalancedParenthesis{
     }
 
     fn parent(&self,_lf:u64) -> u64{
+        println!("Parenthesis: {}", self.get_parenthesis().get_bit(_lf));
         self.enclose(_lf)
     }
     fn rank(&self,_lf:u64) -> u64{

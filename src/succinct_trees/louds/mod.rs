@@ -11,13 +11,13 @@ pub struct Louds {
 impl Louds {
     pub fn new(parenthesis: BitVec<u8>) -> Louds {
         let length_f = parenthesis.len() as f64;
-        let blocksize = (length_f.log2().powi(2) / 32.0).ceil() as usize;
+        let blocksize = (length_f.log2().powi(2)) as usize;
 
         Louds::new_blocksize(parenthesis, blocksize)
     }
 
     pub fn new_blocksize (parenthesis: BitVec<u8>, blocksize: usize) -> Louds {
-        println!("Len: {}", parenthesis.len());
+        println!("Len: {}, Blocksize: {}", parenthesis.len(), blocksize);
         let rank_select = RankSelect::new(parenthesis, blocksize);
 
         Louds{rank_select}
@@ -52,8 +52,10 @@ impl Louds {
         assert!(node > 0);
         assert!(self.has_index(node));
 
-        let rank = self.rank_select.rank_0(node - 1).unwrap();
-        println!("Rank: {}", rank);
+        let message = String::from(format!("Couldn't determine rank_0 of index {}", node -1));
+        let rank = self.rank_select.rank_0(node - 1).expect(&message);
+
+        let message = String::from(format!("Couldn't determine select_1 of index {}", rank+1));
         self.rank_select.select_1(rank +1).unwrap()
     }
 
@@ -93,9 +95,14 @@ impl SuccinctTreeFunctions for Louds{
             return None;
         }
 
-        let y = self.rank_select.rank_0(node -1).unwrap() + 1;
+        let message = String::from(format!("Couldn't determine rank_0 of index {}", node -1));
+        let y = self.rank_select.rank_0(node -1).expect(&message) + 1;
 
-        let inner = self.rank_select.rank_1(self.rank_select.select_1(y).unwrap()).unwrap() + 1;
+        let message = String::from(format!("Couldn't determine select_1 of index {}", y));
+        let select_1 = self.rank_select.select_1(y).expect(&message);
+
+        let message = String::from(format!("Couldn't determine rank_1 of index {}", select_1));
+        let inner = self.rank_select.rank_1(select_1).expect(&message) + 1;
 
         let message = format!("Couldn't determine select_0 from index {}", inner);
         Some(self.rank_select.select_0(inner).expect(&message))
@@ -105,8 +112,13 @@ impl SuccinctTreeFunctions for Louds{
         assert!(node > 0);
         assert!(self.has_index(node));
 
-        let rank = self.rank_select.rank_0(node).unwrap();
-        let select_1 = self.rank_select.select_1(rank).unwrap();
+        println!("Parenthesis at {}: {} | Blocksize: {}", node, self.rank_select.get(node), self.rank_select.k());
+
+        let message = String::from(format!("Couldn't determine rank_0 of index {}", node));
+        let rank_0 = self.rank_select.rank_0(node).expect(&message);
+
+        let message = String::from(format!("Couldn't determine select_1 of index {}", rank_0));
+        let select_1 = self.rank_select.select_1(rank_0).expect(&message);
 
         self.prev_0(select_1) + 1
     }
