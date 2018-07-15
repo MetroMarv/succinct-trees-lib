@@ -25,8 +25,8 @@ pub mod parser {
     use std::fs::File;
     use std::io::{Read, Write};
     use succinct_trees::bp::BalancedParenthesis;
-    use succinct_trees::louds::Louds;
-    use bv::{BitVec, Bits};
+        use succinct_trees::louds::Louds;
+        use bv::{BitVec, Bits};
 
     pub struct TreeParser {
         file: File,
@@ -85,10 +85,22 @@ pub mod parser {
             BalancedParenthesis::new_with_fixed_blocksize(bitvec)
         }
 
+        pub fn read_bp_blksize (&mut self, blocksize: u64) -> BalancedParenthesis {
+            let bitvec = self.read_file_as_bitvec();
+
+            BalancedParenthesis::new(bitvec, blocksize)
+        }
+
         pub fn read_louds (&mut self) -> Louds {
             let bitvec = self.read_file_as_bitvec();
 
-            Louds::new(bitvec.clone())
+            Louds::new(bitvec)
+        }
+
+        pub fn read_louds_blksize (&mut self, blocksize: usize) -> Louds {
+            let bitvec = self.read_file_as_bitvec();
+
+            Louds::new_blocksize(bitvec, blocksize)
         }
 
         fn write_bit (&mut self, bit: bool) {
